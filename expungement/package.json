@@ -1,0 +1,14 @@
+{
+  "name": "expungement",
+  "version": "1.0.0",
+  "description": "A program to fill out expungement forms based on unstructured data",
+  "main": "furnace.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Shane Wade <shane.au.wade@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^3.5.3"
+  }
+}
