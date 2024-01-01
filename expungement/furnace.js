@@ -10,22 +10,39 @@ const HEADER = String.raw`
     \____/\__,_/____/\__/_/\___/\___/\____/_/     /_/     
                                                            
 `
-
-const INFO = 'info: '
+console.log(HEADER)
 
 /**
- * 
- * @param {String} msg 
+ *
+ * @param {*} pdf object from mozilla pdf.js
+ */
+async function getPdfText(pdf) {
+  const documents = []
+  // read each page of the pdf
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum)
+    const textContent = await page.getTextContent()
+    const textItems = textContent.items.map((item) => item.str)
+    documents.push(textItems.join(' '))
+  }
+
+  // this data is structured to input into ChromaDB text embeddings
+  return documents.join('\n')
+}
+
+/**
+ *
+ * @param {String} msg
  */
 function info(msg) {
-    // TODO style
-
+  // TODO style info
+  console.log('INFO:', msg)
 }
 
 // Define the input directory path
-const inputDir = path.join(__dirname, 'input')
-
-console.log('Input dir', inputDir)
+const inputDir = path.join(__dirname, 'furnace')
+console.log(`\n Using => ${inputDir}\n`)
 
 // Initialize watcher.
 const watcher = chokidar.watch(inputDir, {
@@ -34,37 +51,72 @@ const watcher = chokidar.watch(inputDir, {
   depth: 1, // Only look one level deep
 })
 
-// Function to handle a new case folder
-function handleNewCase(casePath) {
-  const caseId = path.basename(casePath)
-  console.log(`New case detected: ${caseId}`)
-
-  // Define expected files
-  const infoPdfPath = path.join(casePath, 'info.pdf')
-  const caseNotesTxtPath = path.join(casePath, 'notes.txt')
-
-  // Check if the required files exist
-  if (fs.existsSync(infoPdfPath) && fs.existsSync(caseNotesTxtPath)) {
-    console.log(`Found required files for case ${caseId}. Ready to process...`)
-    // TODO: Implement processing logic here
-  } else {
-    console.error(`Missing required files for case ${caseId}.`)
-  }
+const INIT_STATE = {
+  case_id: null,
+  case_path: null,
+  filenames: [],
+  text: [],
 }
 
-watcher
-  .on('ready', () => {
-    console.log(HEADER)
-    console.log('watcher initialized')
+// Function to handle a new case folder
+async function handleNewCase(case_id, case_path) {
+  const state = INIT_STATE
+  state.case_path = case_path
+  state.case_id = case_id
 
-    // initialized watcher
-    watcher
-    .on('error', (error) => console.error(`Watcher error: ${error}`))
-    .on('addDir', (path) => handleNewCase(path))
-  })
+  state.filenames = fs.readdirSync(case_path)
 
-  .on('ready', () => {
-    console.log('Initial scan complete. Ready for changes...')
-  })
+  state.filenames.forEach((filename) => info(` |_ ${filename}`))
 
-console.log('Starting Input Monitoring Service...')
+  const pdfjsLib = await import('pdfjs-dist')
+
+  for (const filename of state.filenames) {
+    // load pdf text into state.text
+    if (filename.includes('.pdf')) {
+      const pdf_path = path.join(state.case_path, filename)
+      const pdf = await pdfjsLib.getDocument(pdf_path).promise
+      console.log('PDF loaded')
+
+      const metadata = await pdf.getMetadata()
+
+      Object.keys(metadata).forEach((key) => {
+        console.log(`${key}`)
+        console.log(metadata[key])
+      })
+
+      const pdf_text = await getPdfText(pdf)
+      const new_text = `Contents of ${filename} for case ${state.case_id}:\n\n${pdf_text}`
+      state.text.push(new_text)
+    }
+
+    // load .txt text into state.text
+    if (filename.includes('.txt')) {
+      const file_text = fs.readFileSync(path.join(state.case_path, filename))
+      const new_text = `Contents of ${filename} for case ${state.case_id}:\n\n${file_text}`
+      state.text.push(new_text)
+    }
+  }
+
+  info('case text is loaded and ready for processing')
+
+  const final_text = state.text.join('\n\n\n')
+
+  info(final_text)
+}
+
+watcher.on('ready', () => {
+  info('watcher ready')
+})
+
+// initialized watcher
+watcher.on('error', (error) => console.error(`Watcher error: ${error}`))
+watcher.on('addDir', (_path) => {
+  const case_id = path.basename(_path)
+  if (case_id == 'furnace') return
+
+  info(`new case detected: ${case_id}`)
+  info(`${case_id}: path => ${_path}`)
+  handleNewCase(case_id, _path)
+})
+
+info('Starting Furnace Monitoring Service')

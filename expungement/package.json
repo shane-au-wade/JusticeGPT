@@ -9,6 +9,7 @@
   "author": "Shane Wade <shane.au.wade@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "pdfjs-dist": "^4.0.379"
   }
 }
