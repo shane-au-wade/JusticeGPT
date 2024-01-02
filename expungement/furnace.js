@@ -79,9 +79,9 @@ const INIT_STATE = {
   },
 
   court: {
-    county: '',
     street: '',
-    mailing_address: '',
+    city: '',
+    state: '',
     zip: '',
   },
 
@@ -89,7 +89,7 @@ const INIT_STATE = {
   case_title: '',
   date_of_conviction: '',
   court_house_location: '',
-  convicted_charges: [],
+  charges: [],
   is_misdemeanor: false,
   is_felony: false,
   is_on_probation: false,
@@ -102,7 +102,7 @@ async function generateAttorneyJson(text) {
     name: 'Joshua Curtis Wade',
     bar_number: '310028',
     firm_name: 'The Law Office of Joshua C Wade',
-    street: '2816 Honolulu Ave `#404',
+    street: '2816 Honolulu Ave #404',
     city: 'Verdugo City',
     zip: '91046',
     phone: '818-823-7705',
@@ -114,14 +114,14 @@ async function generateAttorneyJson(text) {
 }
 
 async function generateCaseJson(text) {
-  info(`generating structured json from case text. This may take a few seconds`)
+  info(`generating structured json from case text. This may take a few seconds...`)
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
         content:
-          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name,\ncase_title,\ndate_of_conviction,\ncourt_house_location\nconvicted_charges,\nis_misdemeanor, \nis_felony,\nis_on_probation,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOutput the data as a JSON Object',
+          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_on_probation,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\n\nOutput the data as a JSON Object',
       },
       {
         role: 'user',
@@ -140,13 +140,13 @@ async function generateCaseJson(text) {
 }
 
 async function generateCourtJson(text, name) {
-  info(`generating structured json from courthouse text. This may take a few seconds`)
+  info(`generating structured json from courthouse text. This may take a few seconds...`)
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
-        content: `Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract a courthouse address, given a specific courthouse name:\n\ncounty,\nstreet,\nmailing_address,\nzip,\n\nOutput the data as a JSON Object\n\nCourthouse Info\n\n ${text}`,
+        content: `Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract a courthouse address, given a specific courthouse name:\n\nstreet,\ncity,\nstate,\nzip,\n\nOutput the data as a JSON Object\n\nCourthouse Info\n\n ${text}`,
       },
       {
         role: 'user',
@@ -213,7 +213,7 @@ async function handleNewCase(case_id, case_path) {
     case_title,
     date_of_conviction,
     court_house_location,
-    convicted_charges,
+    charges,
     is_misdemeanor,
     is_felony,
     is_on_probation,
@@ -225,7 +225,7 @@ async function handleNewCase(case_id, case_path) {
   state.case_title = case_title
   state.date_of_conviction = date_of_conviction
   state.court_house_location = court_house_location
-  state.convicted_charges = convicted_charges
+  state.charges = charges
   state.is_misdemeanor = is_misdemeanor
   state.is_felony = is_felony
   state.is_on_probation = is_on_probation
@@ -249,8 +249,6 @@ async function handleNewCase(case_id, case_path) {
     attorney_for: state.defendant_name,
   }
 
-  info(`state => \n${JSON.stringify(state, null, 2)}`)
-
   const courthouses_path = path.join(__dirname, 'courthouses')
   const courthouses_files = fs.readdirSync(courthouses_path)
   const courthouses_pdf_path = path.join(courthouses_path, courthouses_files[0])
@@ -258,11 +256,21 @@ async function handleNewCase(case_id, case_path) {
   const courthouses_pdf_text = await getPdfText(courthouses_pdf)
   const courthouses_text = `Contents of ${courthouses_files[0]} for case ${state.case_id}:\n\n${courthouses_pdf_text}`
 
-  console.log(courthouses_text)
+  info(`courthouse pdf text loaded => ${courthouses_text.length} chars`)
 
   const courthouse_json = await generateCourtJson(courthouses_text, state.court_house_location)
 
   info(`court json => \n${JSON.stringify(courthouse_json, null, 2)}`)
+
+  state.court = {
+    street: courthouse_json.street,
+    city: courthouse_json.city,
+    state: courthouse_json.state,
+    zip: courthouse_json.zip,
+  }
+
+  state.text = ['...']
+  info(`state => \n${JSON.stringify(state, null, 2)}`)
 }
 
 watcher.on('ready', () => {
