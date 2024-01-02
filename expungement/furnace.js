@@ -2,11 +2,11 @@ const chokidar = require('chokidar')
 const fs = require('fs')
 const path = require('path')
 
+const BASE_DIR = path.dirname(__filename)
+
 // Init Open AI API Client
 const { OPENAI_API_KEY } = require('./config')
 const OpenAI = require('openai')
-
-console.log(OPENAI_API_KEY)
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY, // defaults to process.env["OPENAI_API_KEY"]
@@ -20,7 +20,26 @@ const HEADER = String.raw`
     \____/\__,_/____/\__/_/\___/\___/\____/_/     /_/     
                                                            
 `
+
+// define output dir
+const OUTPUT_DIR = path.join(BASE_DIR, 'output')
+
+try {
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR)
+  }
+} catch (err) {
+  console.error(err)
+}
+
+// Define the input directory path
+const FURNACE = 'furnace'
+const FURNACE_DIR = path.join(BASE_DIR, FURNACE)
+
+// INIT PRINT
 console.log(HEADER)
+console.log(`\n Using OpenAI api key => ${OPENAI_API_KEY}`)
+console.log(`\n Using input dir => ${FURNACE_DIR}\n`)
 
 /**
  *
@@ -49,17 +68,6 @@ function info(msg) {
   // TODO style info
   console.log('INFO:', msg)
 }
-
-// Define the input directory path
-const inputDir = path.join(__dirname, 'furnace')
-console.log(`\n Using => ${inputDir}\n`)
-
-// Initialize watcher.
-const watcher = chokidar.watch(inputDir, {
-  ignored: /^\./, // ignore dotfiles
-  persistent: true,
-  depth: 1, // Only look one level deep
-})
 
 const INIT_STATE = {
   case_id: null,
@@ -97,10 +105,47 @@ const INIT_STATE = {
   is_expungement_eligible: false,
 }
 
+async function generateCr181(state, output_path) {
+  const pdfjsLib = await import('pdfjs-dist')
+
+  let pdf = await pdfjsLib.getDocument('./forms/cr181.pdf').promise
+
+  // Mapping the form field ids to the corresponding values from the client information
+  const form_data = {
+    '350R': state.case_id,
+    '338R': state.attorney.bar_number,
+    '339R': state.attorney.name,
+    '340R': state.attorney.firm_name,
+    '341R': state.attorney.street,
+    '342R': state.attorney.city,
+    '344R': state.attorney.zip,
+    '343R': state.attorney.bar_state,
+    '345R': state.attorney.phone,
+    '346R': state.attorney.fax,
+    '347R': state.attorney.email,
+    '348R': state.attorney.attorney_for,
+    '335R': state.court.street, // street address
+    '334R': state.court.county, // superior court of ...
+    '336R': state.court.street, // mailing address
+    '337R': `${state.court.city}, ${state.court.state} ${state.court.zip}`,
+    '333R': state.defendant_name,
+  }
+
+  for ([key, value] of Object.entries(form_data)) {
+    if (!value) continue
+    pdf.annotationStorage.setValue(key, { value: value })
+  }
+
+  let updated_pdf_bytes = await pdf.saveDocument()
+
+  fs.writeFileSync(output_path, updated_pdf_bytes)
+}
+
 async function generateAttorneyJson(text) {
   const attorney_json = {
     name: 'Joshua Curtis Wade',
     bar_number: '310028',
+    bar_state: 'CA',
     firm_name: 'The Law Office of Joshua C Wade',
     street: '2816 Honolulu Ave #404',
     city: 'Verdugo City',
@@ -146,7 +191,7 @@ async function generateCourtJson(text, name) {
     messages: [
       {
         role: 'system',
-        content: `Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract a courthouse address, given a specific courthouse name:\n\nstreet,\ncity,\nstate,\nzip,\n\nOutput the data as a JSON Object\n\nCourthouse Info\n\n ${text}`,
+        content: `Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract a courthouse address, given a specific courthouse name:\n\nstreet,\ncity,\nstate,\nzip,\ncounty,\n\nOutput the data as a JSON Object\n\nCourthouse Info\n\n ${text}`,
       },
       {
         role: 'user',
@@ -169,6 +214,10 @@ async function handleNewCase(case_id, case_path) {
   const state = INIT_STATE
   state.case_path = case_path
   state.case_id = case_id
+
+  const case_output_dir = path.join(OUTPUT_DIR, case_id)
+
+  info(`case output => ${case_output_dir}`)
 
   state.filenames = fs.readdirSync(case_path)
 
@@ -235,10 +284,11 @@ async function handleNewCase(case_id, case_path) {
   // load pdf data from the ./attorney folder
   const bar_pdf_text = ''
   const attorney_json = await generateAttorneyJson(bar_pdf_text)
-  const { name, bar_number, firm_name, street, city, zip, phone, fax, email } = attorney_json
+  const { name, bar_number, firm_name, street, city, zip, phone, fax, email, bar_state } = attorney_json
   state.attorney = {
     name: name,
     bar_number: bar_number,
+    bar_state: bar_state,
     firm_name: firm_name,
     street: street,
     city: city,
@@ -263,176 +313,56 @@ async function handleNewCase(case_id, case_path) {
   info(`court json => \n${JSON.stringify(courthouse_json, null, 2)}`)
 
   state.court = {
+    county: courthouse_json.county,
     street: courthouse_json.street,
     city: courthouse_json.city,
     state: courthouse_json.state,
     zip: courthouse_json.zip,
   }
 
-  state.text = ['...']
-  info(`state => \n${JSON.stringify(state, null, 2)}`)
+  // state.text = ['...']
+  // info(`state => \n${JSON.stringify(state, null, 2)}`)
+
+  const cached_state_path = path.join(case_output_dir, 'cached_state.json')
+  fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
+
+  if (!state.is_expungement_eligible) return
+
+  info(`Case ${state.case_id} is elligible for expungment. Filling forms...`)
+
+  const cr181_output_path = path.join(case_output_dir, `CR-181_Order_for_Dismissal.pdf`)
+  generateCr181(state, cr181_output_path)
+
+  info(`Filled form cr181`)
 }
 
-watcher.on('ready', () => {
-  info('watcher ready')
+// Initialize watcher
+const watcher = chokidar.watch(FURNACE_DIR, {
+  ignored: /^\./, // ignore dotfiles
+  persistent: true,
+  depth: 1, // Only look one level deep
 })
 
-// initialized watcher
+watcher.on('ready', () => info('watcher ready'))
 watcher.on('error', (error) => console.error(`Watcher error: ${error}`))
-watcher.on('addDir', (_path) => {
-  const case_id = path.basename(_path)
-  if (case_id == 'furnace') return
+watcher.on('addDir', (case_path) => {
+  const case_id = path.basename(case_path)
+  if (case_id == FURNACE) return
 
   info(`new case detected: ${case_id}`)
-  info(`${case_id}: path => ${_path}`)
-  handleNewCase(case_id, _path)
+  info(`${case_id}: path => ${case_path}`)
+
+  // ensure the case has an output dir
+  const case_output_dir = path.join(OUTPUT_DIR, case_id)
+  try {
+    if (!fs.existsSync(case_output_dir)) {
+      fs.mkdirSync(case_output_dir)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+
+  handleNewCase(case_id, case_path)
 })
 
 info('Starting Furnace Monitoring Service')
-
-/*
-const field_keys = [
-  'CR-181[0]',
-  'CR-181[0].Page1[0]',
-  'CR-181[0].Page1[0].Caption[0]',
-  'CR-181[0].Page1[0].Caption[0].HeaderSub[0]',
-  'CR-181[0].Page1[0].Caption[0].HeaderSub[0].CaseNumber[0]',
-  'CR-181[0].Page1[0].Caption[0].HeaderSub[0].CaseNumber[0].CaseNumber2[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].AttyBarNo[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Name[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].AttyFirm[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Street[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].City[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].State[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Zip[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Phone[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Fax[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].Email[0]',
-  'CR-181[0].Page1[0].Caption[0].AttyPartyInfo[0].AttyFor[0]',
-  'CR-181[0].Page1[0].Caption[0].CourtInfo[0]',
-  'CR-181[0].Page1[0].Caption[0].CourtInfo[0].CrtCounty[0]',
-  'CR-181[0].Page1[0].Caption[0].CourtInfo[0].CrtStreet[0]',
-  'CR-181[0].Page1[0].Caption[0].CourtInfo[0].CrtMailingAdd[0]',
-  'CR-181[0].Page1[0].Caption[0].CourtInfo[0].CrtCityZip[0]',
-  'CR-181[0].Page1[0].Caption[0].TitlePartyName[0]',
-  'CR-181[0].Page1[0].Caption[0].TitlePartyName[0].Party1[0]',
-  'CR-181[0].Page1[0].LI1[0]',
-  'CR-181[0].Page1[0].LI1[0].CheckBox19[0]',
-  'CR-181[0].Page1[0].LI1[0].li1a[0]',
-  'CR-181[0].Page1[0].LI1[0].li1a[0].Reduc17b_cb[0]',
-  'CR-181[0].Page1[0].LI1[0].li1b[0]',
-  'CR-181[0].Page1[0].LI1[0].li1b[0].Reduc17b_cb[0]',
-  'CR-181[0].Page1[0].LI1[0].li1c[0]',
-  'CR-181[0].Page1[0].LI1[0].li1c[0].Reduc17b_cb[0]',
-  'CR-181[0].Page1[0].LI1[0].li1c[0].OtherSpecify_tf[0]',
-  'CR-181[0].Page1[0].LI2[0]',
-  'CR-181[0].Page1[0].LI2[0].CheckBox19[0]',
-  'CR-181[0].Page1[0].LI2[0].li2a[0]',
-  'CR-181[0].Page1[0].LI2[0].li2a[0].DenyPet17b_cb[0]',
-  'CR-181[0].Page1[0].LI2[0].li2b[0]',
-  'CR-181[0].Page1[0].LI2[0].li2b[0].DenyPet17b_cb[0]',
-  'CR-181[0].Page1[0].LI2[0].li2c[0]',
-  'CR-181[0].Page1[0].LI2[0].li2c[0].DenyPet17b_cb[0]',
-  'CR-181[0].Page1[0].LI2[0].li2c[0].OtherSpecify_tf[0]',
-  'CR-181[0].Page1[0].LI3[0]',
-  'CR-181[0].Page1[0].LI3[0].petitioner_cb[0]',
-  'CR-181[0].Page1[0].LI3[0].GrantsPetThree1203[0]',
-  'CR-181[0].Page1[0].LI3[0].GrantsPetThree1203[1]',
-  'CR-181[0].Page1[0].LI3[0].GrantsPetThree1203[2]',
-  'CR-181[0].Page1[0].LI3[0].GrantsPetThree1203[3]',
-  'CR-181[0].Page1[0].LI3[0].GrantsPetThree1203[4]',
-  'CR-181[0].Page1[0].LI3[0].DenyPetFour1203[0]',
-  'CR-181[0].Page1[0].LI3[0].li3a[0]',
-  'CR-181[0].Page1[0].LI3[0].li3a[0].ThreeAllConv[0]',
-  'CR-181[0].Page1[0].LI3[0].li3b[0]',
-  'CR-181[0].Page1[0].LI3[0].li3b[0].ThreeAllConv[0]',
-  'CR-181[0].Page1[0].LI3[0].li3b[0].TextField6[0]',
-  'CR-181[0].#pageSet[0]',
-  'CR-181[0].#pageSet[0].MPLast[0]',
-  'CR-181[0].#pageSet[0].MPLast[0].FooterButtons[0]',
-  'CR-181[0].#pageSet[0].MPLast[0].FooterButtons[0].Print[0]',
-  'CR-181[0].#pageSet[0].MPLast[0].FooterButtons[0].Save[0]',
-  'CR-181[0].#pageSet[0].MPLast[0].FooterButtons[0].Reset[0]',
-  'CR-181[0].#pageSet[0].MPLast[0].FooterButtons[0].Warning[0]',
-  'CR-181[0].Page2[0]',
-  'CR-181[0].Page2[0].P2Header[0]',
-  'CR-181[0].Page2[0].P2Header[0].CaseNumber2[0]',
-  'CR-181[0].Page2[0].P2Header[0].Party1[0]',
-  'CR-181[0].Page2[0].LI4[0]',
-  'CR-181[0].Page2[0].LI4[0].petitioner_cb[0]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[0]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[1]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[2]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[3]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[4]',
-  'CR-181[0].Page2[0].LI4[0].DenyPetFour1203[5]',
-  'CR-181[0].Page2[0].LI4[0].li4a[0]',
-  'CR-181[0].Page2[0].LI4[0].li4a[0].FourAllConv[0]',
-  'CR-181[0].Page2[0].LI4[0].li4b[0]',
-  'CR-181[0].Page2[0].LI4[0].li4b[0].FourAllConv[0]',
-  'CR-181[0].Page2[0].LI4[0].li4b[0].TextField6[0]',
-  'CR-181[0].Page2[0].LI5[0]',
-  'CR-181[0].Page2[0].LI5[0].CheckBox19[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0].li5a1[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0].li5a1[0].Relief[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0].li5a2[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0].li5a2[0].Relief[0]',
-  'CR-181[0].Page2[0].LI5[0].li5a[0].LI5a[0].li5a2[0].TextField6[0]',
-  'CR-181[0].Page2[0].Signature_dt[0]',
-]
-
-// const editable_fields_arr = Object.entries(fields).filter(([key, value]) => {
-//   if (value[0].editable && !value[0].hidden) return true
-//   return false
-// })
-// const editable_fields = Object.fromEntries(editable_fields_arr)
-
-// let attorney_fields = Object.entries(fields).filter(([key, value]) => {
-//   const isEditable = value[0].editable
-//   const isHidden = value[0].hidden
-//   if (!isEditable || isHidden) return false
-//   if (key.includes('AttyPartyInfo')) return true
-//   return false
-// })
-
-// let court_fields = Object.entries(fields).filter(([key, value]) => {
-//   const isEditable = value[0].editable
-//   const isHidden = value[0].hidden
-//   if (!isEditable || isHidden) return false
-//   if (key.includes('CourtInfo')) return true
-//   return false
-// })
-
-const pdfjsLib = await import('pdfjs-dist')
-
-let pdf = await pdfjsLib.getDocument('./forms/cr181.pdf').promise
-
-let fields = await pdf.getFieldObjects()
-
-let caption_fields_arr = Object.entries(fields).filter(([key, value]) => {
-  const isEditable = value[0].editable
-  const isHidden = value[0].hidden
-  if (!isEditable || isHidden) return false
-  if (key.includes('Caption')) return true
-})
-
-let caption_fields = Object.fromEntries(caption_fields_arr)
-
-caption_fields['CR-181[0].Page1[0].Caption[0].HeaderSub[0].CaseNumber[0].CaseNumber2[0]'][0].value = 'This is a test'
-
-let updated_pdf_bytes = await pdf.saveDocument().promise
-
-pdf.annotationStorage.setValue('350R', { value: 'this is a test' })
-
-const necessary_fields = ['CR-181[0].Page1[0].Caption[0].HeaderSub[0].CaseNumber[0].CaseNumber2[0]']
-
-fs.writeFileSync('./output/cr181_filled.pdf', new_t)
-
-function fillCr181Form() {
-  const field_keys = {}
-}
-
-*/
