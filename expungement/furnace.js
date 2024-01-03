@@ -100,9 +100,10 @@ const INIT_STATE = {
   charges: [],
   is_misdemeanor: false,
   is_felony: false,
-  is_on_probation: false,
+  is_probation_granted: false,
   probation_status: '',
   is_expungement_eligible: false,
+  service_date: '',
 }
 
 async function generateCr181(state, output_path) {
@@ -141,6 +142,182 @@ async function generateCr181(state, output_path) {
   fs.writeFileSync(output_path, updated_pdf_bytes)
 }
 
+async function generateCr180(state, output_path) {
+  const pdfjsLib = await import('pdfjs-dist')
+  let pdf = await pdfjsLib.getDocument('./forms/cr180.pdf').promise
+
+  /**
+   * Filling the caption on page 1
+   */
+
+  // Mapping the form field ids to the corresponding values from the client information
+  const caption_data = {
+    '325R': state.case_id,
+    '308R': state.attorney.bar_number,
+    '309R': state.attorney.name,
+    '310R': state.attorney.firm_name,
+    '311R': state.attorney.street,
+    '312R': state.attorney.city,
+    '313R': state.attorney.bar_state,
+    '314R': state.attorney.zip,
+    '315R': state.attorney.phone,
+    '316R': state.attorney.fax,
+    '317R': state.attorney.email,
+    '318R': state.attorney.attorney_for,
+    '304R': state.court.county,
+    '305R': state.court.street,
+    '307R': `${state.court.city}, ${state.court.zip}`,
+    '303R': state.defendant_name,
+  }
+
+  for ([key, value] of Object.entries(caption_data)) {
+    if (!value) continue
+    pdf.annotationStorage.setValue(key, { value: value })
+  }
+
+  /**
+   * Filling the conviction table on page 1
+   */
+
+  //  CR-180[0].Page1[0].LI1[0].li1[0].ConvictionDate[0],
+  const conviction_date_field_id = '267R'
+  pdf.annotationStorage.setValue(conviction_date_field_id, { value: state.date_of_conviction })
+
+  // [code, section, type_of_offense, reduce_to_misdeamor, reduce_to_infraction ]
+  const conviction_table = [
+    ['294R', '295R', '296R', '297R', '298R'],
+    ['289R', '290R', '291R', '292R', '293R'],
+    ['284R', '285R', '286R', '287R', '288R'],
+    ['279R', '280R', '281R', '282R', '283R'],
+    ['274R', '275R', '276R', '277R', '278R'],
+  ]
+
+  const code_map = {
+    PC: 'Penal',
+    HS: 'Health&Safety',
+    VC: 'Vehicle',
+  }
+
+  for (const [conviction_table_row, charge] of Object.entries(state.charges)) {
+    const { charge_statute, is_conviction } = charge
+    // only process convictions
+    if (!is_conviction) continue
+
+    // charge_statute: 'PC243(e)(1)-M'
+    // get the first 2 characters
+    const _code = charge_statute.slice(0, 2)
+    const code = code_map[_code]
+
+    // get the section
+    const section = charge_statute.slice(2, charge_statute.lastIndexOf('-'))
+
+    let type_of_offense
+    if (charge_statute.at(-1) == 'M') type_of_offense = 'misdemeanor'
+    if (charge_statute.at(-1) == 'F') type_of_offense = 'felony'
+
+    const reduce_to_misdemeanor = 'no'
+    const reduce_to_infraction = 'no'
+
+    const row_data = [code, section, type_of_offense, reduce_to_misdemeanor, reduce_to_infraction]
+
+    const row_ids = conviction_table[conviction_table_row]
+
+    for (const [index, value] of Object.entries(row_data)) {
+      if (!value) continue
+      const key = row_ids[index]
+      pdf.annotationStorage.setValue(key, { value: value })
+    }
+  }
+
+  /**
+   * Filling checkboxs for section 2
+   */
+
+  //'CR-180[0].Page1[0].LI2[0].ProbationGranted[0]'
+  const probation_granted_checkbox_id = '258R'
+
+  //CR-180[0].Page1[0].LI2[0].li2a[0].ProbationGrantedReason[0]
+  const reason_checkbox_a = '265R'
+  const reason_checkbox_b = '264R'
+  const reason_checkbox_c = '262R'
+
+  if (state.is_probation_granted && (state.is_misdemeanor || state.is_felony)) {
+    pdf.annotationStorage.setValue(probation_granted_checkbox_id, { value: 'On' })
+
+    if (state.probation_status.toLowerCase().includes('terminated')) {
+      pdf.annotationStorage.setValue(reason_checkbox_a, { value: 'On' })
+    }
+  }
+
+  /**
+   * Date and Attorney name
+   */
+
+  // CR-180[0].Page3[0].SigDate[0]
+  // CR-180[0].Page3[0].SigName[0]
+
+  const name_id = '226R'
+  pdf.annotationStorage.setValue(name_id, { value: state.attorney.name })
+
+  const date_id = '339R'
+  pdf.annotationStorage.setValue(date_id, { value: state.service_date })
+
+  let updated_pdf_bytes = await pdf.saveDocument()
+
+  fs.writeFileSync(output_path, updated_pdf_bytes)
+}
+
+async function generateCr106(state, output_path) {
+  const pdfjsLib = await import('pdfjs-dist')
+
+  let pdf = await pdfjsLib.getDocument({
+    url: './forms/cr106.pdf',
+    verbosity: 0,
+  }).promise
+
+  form_data = {
+    '231R': `${state.court.county}\n${state.court_house_location}\n${state.court.street}\n${state.court.city}, ${state.court.state} ${state.court.zip}`,
+    '232R': state.case_id,
+    '203R': state.case_id,
+    '233R': state.defendant_name,
+    '227R': state.attorney.street,
+    '228R': state.attorney.city,
+    '229R': state.attorney.bar_state,
+    '230R': state.attorney.zip,
+    '206R': 'CR-180 + CR-181 + CR-106',
+    // checkbox for business address
+    '213R': 'On',
+
+    // service by mail fields
+    '207R': `${state.court.county} District Attorney's Office`,
+    '208R': state.court.street,
+    '224R': state.court.city,
+    '225R': state.court.state,
+    '226R': state.court.zip,
+
+    // date sent
+    '217R': state.service_date,
+    '218R': state.attorney.city,
+    '219R': state.attorney.bar_state,
+    // sent with U.S. Postal Service checkbox
+    '215R': 'On',
+
+    // sig name
+    '185R': state.attorney.name,
+    // sig date
+    '184R': state.service_date,
+  }
+
+  for ([key, value] of Object.entries(form_data)) {
+    if (!value) continue
+    pdf.annotationStorage.setValue(key, { value: value })
+  }
+
+  let updated_pdf_bytes = await pdf.saveDocument()
+
+  fs.writeFileSync(output_path, updated_pdf_bytes)
+}
+
 async function generateAttorneyJson(text) {
   const attorney_json = {
     name: 'Joshua Curtis Wade',
@@ -166,7 +343,7 @@ async function generateCaseJson(text) {
       {
         role: 'system',
         content:
-          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_on_probation,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\n\nOutput the data as a JSON Object',
+          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_probation_granted,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\n\nOutput the data as a JSON Object',
       },
       {
         role: 'user',
@@ -219,6 +396,13 @@ async function handleNewCase(case_id, case_path) {
 
   info(`case output => ${case_output_dir}`)
 
+  // create service date and use this date for downstream signed dates
+  const service_date = new Date()
+  service_date.setDate(service_date.getDate() + 1)
+  state.service_date = service_date.toLocaleDateString({ timeZone: 'America/Los Angeles' })
+
+  info(`service date => ${state.service_date}`)
+
   state.filenames = fs.readdirSync(case_path)
 
   state.filenames.forEach((filename) => info(` |_ ${filename}`))
@@ -265,7 +449,7 @@ async function handleNewCase(case_id, case_path) {
     charges,
     is_misdemeanor,
     is_felony,
-    is_on_probation,
+    is_probation_granted,
     probation_status,
     is_expungement_eligible,
   } = case_json
@@ -277,7 +461,7 @@ async function handleNewCase(case_id, case_path) {
   state.charges = charges
   state.is_misdemeanor = is_misdemeanor
   state.is_felony = is_felony
-  state.is_on_probation = is_on_probation
+  state.is_probation_granted = is_probation_granted
   state.probation_status = probation_status
   state.is_expungement_eligible = is_expungement_eligible
 
@@ -331,9 +515,19 @@ async function handleNewCase(case_id, case_path) {
   info(`Case ${state.case_id} is elligible for expungment. Filling forms...`)
 
   const cr181_output_path = path.join(case_output_dir, `CR-181_Order_for_Dismissal.pdf`)
-  generateCr181(state, cr181_output_path)
+  const cr180_output_path = path.join(case_output_dir, `CR-180_Petition_for_Dismissal.pdf`)
+  const cr106_output_path = path.join(case_output_dir, `CR-106_Proof_of_Service.pdf`)
 
-  info(`Filled form cr181`)
+  generateCr181(state, cr181_output_path)
+  info(`Filled form CR-181`)
+
+  generateCr180(state, cr180_output_path)
+  info('Filled form CR-180')
+
+  generateCr106(state, cr106_output_path)
+  info('Filled form CR-106')
+
+  info(`Expungement forms complete for case: ${state.case_id}`)
 }
 
 // Initialize watcher

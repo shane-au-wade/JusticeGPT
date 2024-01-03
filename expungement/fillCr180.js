@@ -38,7 +38,7 @@ const state = {
   ],
   is_misdemeanor: true,
   is_felony: false,
-  is_on_probation: true,
+  is_probation_granted: true,
   probation_status: 'Terminated',
   is_expungement_eligible: true,
   filenames: ['LA Court.pdf'],
@@ -122,7 +122,14 @@ async function analyzePDF() {
 async function generateCr180(state) {
   const pdfjsLib = await import('pdfjs-dist')
 
-  let pdf = await pdfjsLib.getDocument('./forms/cr180.pdf').promise
+  let pdf = await pdfjsLib.getDocument({
+    url: './forms/cr180.pdf',
+    verbosity: 0,
+  }).promise
+
+  /**
+   * Filling the caption on page 1
+   */
 
   // Mapping the form field ids to the corresponding values from the client information
   const caption_data = {
@@ -148,6 +155,10 @@ async function generateCr180(state) {
     if (!value) continue
     pdf.annotationStorage.setValue(key, { value: value })
   }
+
+  /**
+   * Filling the conviction table on page 1
+   */
 
   //  CR-180[0].Page1[0].LI1[0].li1[0].ConvictionDate[0],
   const conviction_date_field_id = '267R'
@@ -197,6 +208,36 @@ async function generateCr180(state) {
       pdf.annotationStorage.setValue(key, { value: value })
     }
   }
+
+  /**
+   * Filling checkboxs for section 2
+   */
+
+  //'CR-180[0].Page1[0].LI2[0].ProbationGranted[0]'
+  const probation_granted_checkbox_id = '258R'
+
+  //CR-180[0].Page1[0].LI2[0].li2a[0].ProbationGrantedReason[0]
+  const reason_checkbox_a = '265R'
+  const reason_checkbox_b = '264R'
+  const reason_checkbox_c = '262R'
+
+  if (state.is_probation_granted && (state.is_misdemeanor || state.is_felony)) {
+    pdf.annotationStorage.setValue(probation_granted_checkbox_id, { value: 'On' })
+
+    if (state.probation_status.toLowerCase().includes('terminated')) {
+      pdf.annotationStorage.setValue(reason_checkbox_a, { value: 'On' })
+    }
+  }
+
+  /**
+   * Date and Attorney name
+   */
+
+  // CR-180[0].Page3[0].SigDate[0]
+  // CR-180[0].Page3[0].SigName[0]
+
+  const name_id = '226R'
+  pdf.annotationStorage.setValue(name_id, { value: state.attorney.name })
 
   let updated_pdf_bytes = await pdf.saveDocument()
 
