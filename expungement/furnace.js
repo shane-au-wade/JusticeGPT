@@ -368,7 +368,7 @@ async function generateCaseJson(text) {
       {
         role: 'system',
         content:
-          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_probation_granted,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\nOnly cite the charge statutue code.\n\nOutput the data as a JSON Object',
+          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location,\nis_misdemeanor,\nis_felony,\nis_probation_granted,\nprobation_status,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\n\nOutput the data as a JSON Object',
       },
       {
         role: 'user',
@@ -384,6 +384,32 @@ async function generateCaseJson(text) {
   const generated_json_string = response.choices[0].message.content
   const case_json = JSON.parse(generated_json_string)
   return case_json
+}
+
+async function generateChargesJson(text) {
+  info(`generating charges json from courthouse text. This may take a few seconds...`)
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract the conviction charges from a case document:\n\ncase_id,\ncharges: Array<{\ncount, charge_statute , \nplea, \nlast_disposition, \nis_conviction\n}>\n\nDefault a value to null if it is empty.\n\nis_conviction is false, if last_disposition is null.\n\nOnly cite the charge statute code, include the -M or -F. \n\nOutput the data as a JSON Object.\n\n',
+      },
+      {
+        role: 'user',
+        content: text,
+      },
+    ],
+    temperature: 1,
+    max_tokens: 512,
+    top_p: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+  })
+  const generated_json_string = response.choices[0].message.content
+  const charges_json = JSON.parse(generated_json_string)
+  return charges_json
 }
 
 async function generateCourtJson(text, state) {
@@ -464,7 +490,6 @@ async function handleNewCase(case_id, case_path) {
   info(`case text is loaded and ready for processing => ${combined_text.length} chars`)
 
   const case_json = await generateCaseJson(combined_text)
-
   info(`case json => \n${JSON.stringify(case_json, null, 2)}}`)
 
   const {
@@ -472,7 +497,6 @@ async function handleNewCase(case_id, case_path) {
     case_title,
     date_of_conviction,
     court_house_location,
-    charges,
     is_misdemeanor,
     is_felony,
     is_probation_granted,
@@ -484,17 +508,53 @@ async function handleNewCase(case_id, case_path) {
   state.case_title = case_title
   state.date_of_conviction = date_of_conviction
   state.court_house_location = court_house_location
-  state.charges = charges
   state.is_misdemeanor = is_misdemeanor
   state.is_felony = is_felony
   state.is_probation_granted = is_probation_granted
   state.probation_status = probation_status
   state.is_expungement_eligible = is_expungement_eligible
 
+  const charges_json = await generateChargesJson(combined_text)
+  info(`charges json => \n${JSON.stringify(charges_json, null, 2)}}`)
+
+  const { charges } = charges_json
+  state.charges = charges
+
   // perform prelimary filtering based on case json
   const _probation_status = state.probation_status.toLowerCase()
   if (_probation_status.includes('diversion') || _probation_status.includes('revoked')) {
     const case_notes = `Case with probation status of => ${_probation_status},\n\ttherefore no further processing is required`
+
+    info(case_notes)
+
+    const case_notes_path = path.join(case_output_dir, 'notes.txt')
+    fs.writeFileSync(case_notes_path, case_notes)
+
+    info('Wrote case notes.txt')
+
+    const cached_state_path = path.join(case_output_dir, 'cached_state.json')
+    fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
+
+    for (const filename of state.filenames) {
+      const file_path = path.join(case_path, filename)
+      const new_file_path = path.join(case_output_dir, filename)
+      fs.copyFileSync(file_path, new_file_path)
+      fs.rmSync(file_path)
+    }
+
+    fs.rmdirSync(case_path)
+
+    info(`✨ Cleaned up files for: ${state.case_id}`)
+
+    return
+  }
+
+  const convicted_charges = state.charges.filter((charge) => charge.is_conviction)
+
+  info(`Found ${convicted_charges.length} convicted charges`)
+
+  if (convicted_charges.length == 0) {
+    const case_notes = `Case has zero convicted charges,\n\ttherefore no further processing is required`
 
     info(case_notes)
 
