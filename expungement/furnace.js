@@ -168,6 +168,11 @@ async function generateCr180(state, output_path) {
     '305R': state.court.street,
     '307R': `${state.court.city}, ${state.court.zip}`,
     '303R': state.defendant_name,
+
+    // CR-180[0].Page2[0].pXCaption[0].Defendant[0]
+    '254R': state.defendant_name,
+    //CR-180[0].Page2[0].pXCaption[0].CaseNumber1[0]
+    '253R': state.case_id,
   }
 
   for ([key, value] of Object.entries(caption_data)) {
@@ -231,6 +236,8 @@ async function generateCr180(state, output_path) {
 
   /**
    * Filling checkboxs for section 2
+   *
+   * this case is a 1203.4
    */
 
   //'CR-180[0].Page1[0].LI2[0].ProbationGranted[0]'
@@ -242,11 +249,29 @@ async function generateCr180(state, output_path) {
   const reason_checkbox_c = '262R'
 
   if (state.is_probation_granted && (state.is_misdemeanor || state.is_felony)) {
+    info(`Case ${state.case_id} classifeid as => 1203.4 for CR-180 form`)
     pdf.annotationStorage.setValue(probation_granted_checkbox_id, { value: 'On' })
 
     if (state.probation_status.toLowerCase().includes('terminated')) {
       pdf.annotationStorage.setValue(reason_checkbox_a, { value: 'On' })
     }
+  }
+
+  /**
+   * Filling checkboxs for section 3
+   *
+   * this case is a 1203.4a
+   *
+   * a misdemeanor with a status of probation denied is elligible for
+   * a 1203.4a dismissal
+   */
+
+  if (state.is_misdemeanor && state.probation_status.toLowerCase().includes('denied')) {
+    info(`Case ${state.case_id} classifeid as => 1203.4a for CR-180 form`)
+    //CR-180[0].Page2[0].LI3[0].OffenseWSentence[0] checkbox
+    pdf.annotationStorage.setValue('247R', { value: 'On' })
+    //CR-180[0].Page2[0].LI3[0].li3a[0].ProbationNotGrantedReason[0] checkbox a
+    pdf.annotationStorage.setValue('252R', { value: 'On' })
   }
 
   /**
@@ -343,7 +368,7 @@ async function generateCaseJson(text) {
       {
         role: 'system',
         content:
-          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_probation_granted,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\n\nOutput the data as a JSON Object',
+          'Assume the role of a legal data analyst.  In your role you will extract structured data from unstructured documents.\n\nIn particular, you will extract:\n\ndefendant_name, \ndate_of_conviction,\ncourt_house_location\ncharges: Array<{\ncount,\ncharge_statute ,\nplea,\nlast_disposition,\nis_conviction\n}> ,\nis_misdemeanor, \nis_felony,\nis_probation_granted,\nprobation_status,\nis_expungement_eligible,\n\nNote that if the probation status is terminated, then the case is eligible for expungement\n\nOnly included charges with a conviction.\nOnly cite the charge statutue code.\n\nOutput the data as a JSON Object',
       },
       {
         role: 'user',
@@ -361,7 +386,7 @@ async function generateCaseJson(text) {
   return case_json
 }
 
-async function generateCourtJson(text, name) {
+async function generateCourtJson(text, state) {
   info(`generating structured json from courthouse text. This may take a few seconds...`)
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
@@ -372,7 +397,7 @@ async function generateCourtJson(text, name) {
       },
       {
         role: 'user',
-        content: `generate the address for ${name}`,
+        content: `generate the address for => ${state.court_house_location}`,
       },
     ],
     temperature: 1,
@@ -388,7 +413,8 @@ async function generateCourtJson(text, name) {
 
 // Function to handle a new case folder
 async function handleNewCase(case_id, case_path) {
-  const state = INIT_STATE
+  const state = JSON.parse(JSON.stringify(INIT_STATE))
+
   state.case_path = case_path
   state.case_id = case_id
 
@@ -465,6 +491,35 @@ async function handleNewCase(case_id, case_path) {
   state.probation_status = probation_status
   state.is_expungement_eligible = is_expungement_eligible
 
+  // perform prelimary filtering based on case json
+  const _probation_status = state.probation_status.toLowerCase()
+  if (_probation_status.includes('diversion') || _probation_status.includes('revoked')) {
+    const case_notes = `Case with probation status of => ${_probation_status},\n\ttherefore no further processing is required`
+
+    info(case_notes)
+
+    const case_notes_path = path.join(case_output_dir, 'notes.txt')
+    fs.writeFileSync(case_notes_path, case_notes)
+
+    info('Wrote case notes.txt')
+
+    const cached_state_path = path.join(case_output_dir, 'cached_state.json')
+    fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
+
+    for (const filename of state.filenames) {
+      const file_path = path.join(case_path, filename)
+      const new_file_path = path.join(case_output_dir, filename)
+      fs.copyFileSync(file_path, new_file_path)
+      fs.rmSync(file_path)
+    }
+
+    fs.rmdirSync(case_path)
+
+    info(`✨ Cleaned up files for: ${state.case_id}`)
+
+    return
+  }
+
   // load pdf data from the ./attorney folder
   const bar_pdf_text = ''
   const attorney_json = await generateAttorneyJson(bar_pdf_text)
@@ -492,12 +547,12 @@ async function handleNewCase(case_id, case_path) {
 
   info(`courthouse pdf text loaded => ${courthouses_text.length} chars`)
 
-  const courthouse_json = await generateCourtJson(courthouses_text, state.court_house_location)
+  const courthouse_json = await generateCourtJson(courthouses_text, state)
 
   info(`court json => \n${JSON.stringify(courthouse_json, null, 2)}`)
 
   state.court = {
-    county: courthouse_json.county,
+    county: courthouse_json.county.toUpperCase(),
     street: courthouse_json.street,
     city: courthouse_json.city,
     state: courthouse_json.state,
@@ -510,7 +565,7 @@ async function handleNewCase(case_id, case_path) {
   const cached_state_path = path.join(case_output_dir, 'cached_state.json')
   fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
 
-  if (!state.is_expungement_eligible) return
+  // if (!state.is_expungement_eligible) return
 
   info(`Case ${state.case_id} is elligible for expungment. Filling forms...`)
 
@@ -528,6 +583,20 @@ async function handleNewCase(case_id, case_path) {
   info('Filled form CR-106')
 
   info(`Expungement forms complete for case: ${state.case_id}`)
+
+  for (const filename of state.filenames) {
+    const file_path = path.join(case_path, filename)
+    const new_file_path = path.join(case_output_dir, filename)
+    fs.copyFileSync(file_path, new_file_path)
+    fs.rmSync(file_path)
+  }
+
+  fs.rmdirSync(case_path)
+
+  info(`✨ Cleaned up files for: ${state.case_id}`)
+
+  // move all files from the case path to the output folder
+  // remove the original case path
 }
 
 // Initialize watcher
