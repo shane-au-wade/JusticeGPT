@@ -130,6 +130,12 @@ async function generateCr181(state, output_path) {
     '336R': state.court.street, // mailing address
     '337R': `${state.court.city}, ${state.court.state} ${state.court.zip}`,
     '333R': state.defendant_name,
+
+    // CR-181[0].Page2[0].P2Header[0].CaseNumber2[0]
+    '374R': state.case_id,
+
+    // CR-181[0].Page2[0].P2Header[0].Party1[0]
+    '375R': state.defendant_name,
   }
 
   for ([key, value] of Object.entries(form_data)) {
@@ -171,8 +177,13 @@ async function generateCr180(state, output_path) {
 
     // CR-180[0].Page2[0].pXCaption[0].Defendant[0]
     '254R': state.defendant_name,
-    //CR-180[0].Page2[0].pXCaption[0].CaseNumber1[0]
+    // CR-180[0].Page2[0].pXCaption[0].CaseNumber1[0]
     '253R': state.case_id,
+
+    // CR-180[0].Page3[0].pXCaption[0].Defendant[0]
+    '355R': state.defendant_name,
+    // CR-180[0].Page3[0].pXCaption[0].CaseNumber1[0]
+    '354R': state.case_id,
   }
 
   for ([key, value] of Object.entries(caption_data)) {
@@ -327,6 +338,9 @@ async function generateCr106(state, output_path) {
     // sent with U.S. Postal Service checkbox
     '215R': 'On',
 
+    // CR-106[0].Page2[0].PxCaption[0].CaseNumber[0]
+    '203R': state.case_id,
+
     // sig name
     '185R': state.attorney.name,
     // sig date
@@ -437,6 +451,22 @@ async function generateCourtJson(text, state) {
   return court_json
 }
 
+async function cleanCaseFiles(case_path, case_output_dir, state) {
+  const cached_state_path = path.join(case_output_dir, 'cached_state.json')
+  fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
+
+  for (const filename of state.filenames) {
+    const file_path = path.join(case_path, filename)
+    const new_file_path = path.join(case_output_dir, filename)
+    fs.copyFileSync(file_path, new_file_path)
+    fs.rmSync(file_path)
+  }
+
+  fs.rmdirSync(case_path)
+
+  info(`✨ Cleaned up files for: ${state.case_id}`)
+}
+
 // Function to handle a new case folder
 async function handleNewCase(case_id, case_path) {
   const state = JSON.parse(JSON.stringify(INIT_STATE))
@@ -532,19 +562,7 @@ async function handleNewCase(case_id, case_path) {
 
     info('Wrote case notes.txt')
 
-    const cached_state_path = path.join(case_output_dir, 'cached_state.json')
-    fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
-
-    for (const filename of state.filenames) {
-      const file_path = path.join(case_path, filename)
-      const new_file_path = path.join(case_output_dir, filename)
-      fs.copyFileSync(file_path, new_file_path)
-      fs.rmSync(file_path)
-    }
-
-    fs.rmdirSync(case_path)
-
-    info(`✨ Cleaned up files for: ${state.case_id}`)
+    await cleanCaseFiles(case_path, case_output_dir, state)
 
     return
   }
@@ -563,19 +581,7 @@ async function handleNewCase(case_id, case_path) {
 
     info('Wrote case notes.txt')
 
-    const cached_state_path = path.join(case_output_dir, 'cached_state.json')
-    fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
-
-    for (const filename of state.filenames) {
-      const file_path = path.join(case_path, filename)
-      const new_file_path = path.join(case_output_dir, filename)
-      fs.copyFileSync(file_path, new_file_path)
-      fs.rmSync(file_path)
-    }
-
-    fs.rmdirSync(case_path)
-
-    info(`✨ Cleaned up files for: ${state.case_id}`)
+    await cleanCaseFiles(case_path, case_output_dir, state)
 
     return
   }
@@ -619,44 +625,24 @@ async function handleNewCase(case_id, case_path) {
     zip: courthouse_json.zip,
   }
 
-  // state.text = ['...']
-  // info(`state => \n${JSON.stringify(state, null, 2)}`)
-
-  const cached_state_path = path.join(case_output_dir, 'cached_state.json')
-  fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
-
-  // if (!state.is_expungement_eligible) return
-
   info(`Case ${state.case_id} is elligible for expungment. Filling forms...`)
 
   const cr181_output_path = path.join(case_output_dir, `CR-181_Order_for_Dismissal.pdf`)
   const cr180_output_path = path.join(case_output_dir, `CR-180_Petition_for_Dismissal.pdf`)
   const cr106_output_path = path.join(case_output_dir, `CR-106_Proof_of_Service.pdf`)
 
-  generateCr181(state, cr181_output_path)
+  await generateCr181(state, cr181_output_path)
   info(`Filled form CR-181`)
 
-  generateCr180(state, cr180_output_path)
+  await generateCr180(state, cr180_output_path)
   info('Filled form CR-180')
 
-  generateCr106(state, cr106_output_path)
+  await generateCr106(state, cr106_output_path)
   info('Filled form CR-106')
 
   info(`Expungement forms complete for case: ${state.case_id}`)
 
-  for (const filename of state.filenames) {
-    const file_path = path.join(case_path, filename)
-    const new_file_path = path.join(case_output_dir, filename)
-    fs.copyFileSync(file_path, new_file_path)
-    fs.rmSync(file_path)
-  }
-
-  fs.rmdirSync(case_path)
-
-  info(`✨ Cleaned up files for: ${state.case_id}`)
-
-  // move all files from the case path to the output folder
-  // remove the original case path
+  await cleanCaseFiles(case_path, case_output_dir, state)
 }
 
 // Initialize watcher

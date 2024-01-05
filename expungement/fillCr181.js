@@ -44,6 +44,73 @@ const state = {
   filenames: ['LA Court.pdf'],
 }
 
+async function generateCr181(state) {
+  const pdfjsLib = await import('pdfjs-dist')
+
+  let pdf = await pdfjsLib.getDocument('./forms/cr181.pdf').promise
+
+  // Mapping the form field ids to the corresponding values from the client information
+  const form_data = {
+    '350R': state.case_id,
+    '338R': state.attorney.bar_number,
+    '339R': state.attorney.name,
+    '340R': state.attorney.firm_name,
+    '341R': state.attorney.street,
+    '342R': state.attorney.city,
+    '344R': state.attorney.zip,
+    '343R': state.attorney.bar_state,
+    '345R': state.attorney.phone,
+    '346R': state.attorney.fax,
+    '347R': state.attorney.email,
+    '348R': state.attorney.attorney_for,
+    '335R': state.court.street, // street address
+    '334R': state.court.county, // superior court of ...
+    '336R': state.court.street, // mailing address
+    '337R': `${state.court.city}, ${state.court.state} ${state.court.zip}`,
+    '333R': state.defendant_name,
+  }
+
+  for ([key, value] of Object.entries(form_data)) {
+    if (!value) continue
+    // console.log(key, value)
+    pdf.annotationStorage.setValue(key, { value: value })
+  }
+
+  let updated_pdf_bytes = await pdf.saveDocument()
+
+  fs.writeFileSync('./cr181_ai_filled.pdf', updated_pdf_bytes)
+}
+
+generateCr181(state)
+
+async function analyzePDF() {
+  let fields = await pdf.getFieldObjects()
+
+  let caption_fields_arr = Object.entries(fields).filter(([key, value]) => {
+    const isEditable = value[0].editable
+    const isHidden = value[0].hidden
+    if (!isEditable || isHidden) return false
+    if (key.includes('Caption')) return true
+  })
+
+  const simple_caption_fields = caption_fields_arr.map(([key, value]) => {
+    const { id, multiline, type } = value[0]
+
+    const cleaned_key = key.replaceAll('[0]', '').replaceAll('Atty', 'Attorney').replaceAll('Crt', 'Court')
+
+    return [id, { field_name: cleaned_key, id: id, multiline: multiline, type, type }]
+  })
+
+  let caption_fields = Object.fromEntries(caption_fields_arr)
+
+  let s_caption_fields = Object.fromEntries(simple_caption_fields)
+
+  fs.writeFileSync('./caption_fields.json', JSON.stringify(s_caption_fields, null, 2))
+
+  //   console.log(JSON.stringify(s_caption_fields, null, 2))
+}
+
+
 const pdf_caption_fields = {
   '350R': {
     field_name: 'CR-181.Page1.Caption.HeaderSub.CaseNumber.CaseNumber2',
@@ -147,70 +214,4 @@ const pdf_caption_fields = {
     multiline: false,
     type: 'text',
   },
-}
-
-async function generateCr181(state) {
-  const pdfjsLib = await import('pdfjs-dist')
-
-  let pdf = await pdfjsLib.getDocument('./forms/cr181.pdf').promise
-
-  // Mapping the form field ids to the corresponding values from the client information
-  const form_data = {
-    '350R': state.case_id,
-    '338R': state.attorney.bar_number,
-    '339R': state.attorney.name,
-    '340R': state.attorney.firm_name,
-    '341R': state.attorney.street,
-    '342R': state.attorney.city,
-    '344R': state.attorney.zip,
-    '343R': state.attorney.bar_state,
-    '345R': state.attorney.phone,
-    '346R': state.attorney.fax,
-    '347R': state.attorney.email,
-    '348R': state.attorney.attorney_for,
-    '335R': state.court.street, // street address
-    '334R': state.court.county, // superior court of ...
-    '336R': state.court.street, // mailing address
-    '337R': `${state.court.city}, ${state.court.state} ${state.court.zip}`,
-    '333R': state.defendant_name,
-  }
-
-  for ([key, value] of Object.entries(form_data)) {
-    if (!value) continue
-    // console.log(key, value)
-    pdf.annotationStorage.setValue(key, { value: value })
-  }
-
-  let updated_pdf_bytes = await pdf.saveDocument()
-
-  fs.writeFileSync('./cr181_ai_filled.pdf', updated_pdf_bytes)
-}
-
-generateCr181(state)
-
-async function analyzePDF() {
-  let fields = await pdf.getFieldObjects()
-
-  let caption_fields_arr = Object.entries(fields).filter(([key, value]) => {
-    const isEditable = value[0].editable
-    const isHidden = value[0].hidden
-    if (!isEditable || isHidden) return false
-    if (key.includes('Caption')) return true
-  })
-
-  const simple_caption_fields = caption_fields_arr.map(([key, value]) => {
-    const { id, multiline, type } = value[0]
-
-    const cleaned_key = key.replaceAll('[0]', '').replaceAll('Atty', 'Attorney').replaceAll('Crt', 'Court')
-
-    return [id, { field_name: cleaned_key, id: id, multiline: multiline, type, type }]
-  })
-
-  let caption_fields = Object.fromEntries(caption_fields_arr)
-
-  let s_caption_fields = Object.fromEntries(simple_caption_fields)
-
-  fs.writeFileSync('./caption_fields.json', JSON.stringify(s_caption_fields, null, 2))
-
-  //   console.log(JSON.stringify(s_caption_fields, null, 2))
 }
