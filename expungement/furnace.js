@@ -401,7 +401,7 @@ async function generateCaseJson(text) {
 }
 
 async function generateChargesJson(text) {
-  info(`generating charges json from courthouse text. This may take a few seconds...`)
+  info(`generateChargesJson() called. This may take a few seconds...`)
   const response = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [
@@ -427,7 +427,7 @@ async function generateChargesJson(text) {
 }
 
 async function generateCourtJson(text, state) {
-  info(`generating structured json from courthouse text. This may take a few seconds...`)
+  info(`generateCourtJson() called. This may take a few seconds...`)
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
@@ -450,6 +450,13 @@ async function generateCourtJson(text, state) {
   const court_json = JSON.parse(generated_json_string)
   return court_json
 }
+
+
+async function generateCaseDatesJson(text, state) {
+  info(`generateCaseDatesJson() called. This may take a few seconds...`)
+  return {}
+}
+
 
 async function cleanCaseFiles(case_path, case_output_dir, state) {
   const cached_state_path = path.join(case_output_dir, 'cached_state.json')
