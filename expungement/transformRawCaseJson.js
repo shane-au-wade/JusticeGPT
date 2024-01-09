@@ -1219,7 +1219,7 @@ const INIT_STATE = {
 
 const state = JSON.parse(JSON.stringify(INIT_STATE))
 
-const { caseInfo, parties, otherCriminalInformation } = RAW_CASE_JSON
+const { caseInfo, parties, otherCriminalInformation, info } = RAW_CASE_JSON
 
 // filter the parties for the defendant
 
