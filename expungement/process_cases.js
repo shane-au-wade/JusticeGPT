@@ -1,6 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
+const { getRawJsonViz } = require('./visualizeRawCaseJson')
+
 // Init Open AI API Client
 const { OPENAI_API_KEY } = require('./config')
 const OpenAI = require('openai')
@@ -563,6 +565,13 @@ async function main() {
 
     const cached_state_path = path.join(case_output_dir, 'cached_state.json')
     fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
+
+    const case_viz_path = path.join(case_output_dir, `${case_id}.md`)
+    const case_markdown = getRawJsonViz(case_json)
+    fs.writeFileSync(case_viz_path, case_markdown)
+
+    const raw_case_json_path = path.join(case_output_dir, `${case_id}_raw.json`)
+    fs.writeFileSync(raw_case_json_path, JSON.stringify(case_json, null, 2))
   }
 }
 
