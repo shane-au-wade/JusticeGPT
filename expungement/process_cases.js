@@ -19,6 +19,12 @@ const BASE_DIR = path.dirname(__filename)
 
 const CACHED_CASE_MAP_PATH = path.join(CASES_DIR, 'case_map_cache.json')
 
+const CACHED_PROCESSED_MAP = path.join(CASES_DIR, 'processed.json')
+
+if (!fs.existsSync(CACHED_PROCESSED_MAP)) {
+  fs.writeFileSync(CACHED_PROCESSED_MAP, '{}')
+}
+
 const OUTPUT_DIR = path.join(BASE_DIR, 'output')
 
 const HEADER = String.raw`
@@ -520,7 +526,13 @@ async function main() {
 
   info(`Found ${case_ids.length} cases`)
 
+  const processed_map = JSON.parse(fs.readFileSync(CACHED_PROCESSED_MAP))
+
   for (const [index, case_id] of case_ids.entries()) {
+    if (processed_map[case_id]) {
+      info(`Already processed => ${case_id}`)
+    }
+
     const case_output_dir = path.join(OUTPUT_DIR, case_id)
 
     info(`${index + 1}/${case_ids.length} case ${case_id}`)
@@ -572,6 +584,9 @@ async function main() {
 
     const raw_case_json_path = path.join(case_output_dir, `${case_id}_raw.json`)
     fs.writeFileSync(raw_case_json_path, JSON.stringify(case_json, null, 2))
+
+    processed_map[case_id] = true
+    fs.writeFileSync(CACHED_PROCESSED_MAP, JSON.stringify(processed_map))
   }
 }
 
