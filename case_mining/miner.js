@@ -92,7 +92,9 @@ const END_ID = 200
 
 let _ids = [...Array(END_ID).keys()]
 
-const ids = _ids.map((_id) => `${ID_PREFIX}${(_id + 1).toString().padStart(5, 0)}`)
+// const ids = _ids.map((_id) => `${ID_PREFIX}${(_id + 1).toString().padStart(5, 0)}`)
+
+const ids = ['2PD00059']
 
 console.log(ids)
 
@@ -205,7 +207,7 @@ async function main() {
         charge_statute: statuteName.split(' ')[0],
         plea: pleaHistoryDisplay,
         disply_last_disposition: lastDispositionDisplay,
-        lase_disposition: chargeDispositionDateString,
+        last_disposition: chargeDispositionDateString,
         is_conviction: _is_conviction,
       }
 
@@ -228,7 +230,8 @@ async function main() {
     // dump the raw case_json to disc
     // only dump cases with convictions
 
-    if (convictions.length > 0) {
+    // if (convictions.length > 0) {
+    if (true) {
       console.log(`[INFO] saving case json for possible expungement`)
       const case_json_path = path.join(OUTPUT_DIR, `${id}.json`)
       fs.writeFileSync(case_json_path, JSON.stringify(case_json, null, 2))

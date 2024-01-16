@@ -13,7 +13,7 @@ const openai = new OpenAI({
 
 // CONSTANTS
 
-const CASES_DIR = '/home/shane/repos/JusticeGPT/cases_9WC00001_9WC00200'
+const CASES_DIR = '/home/shane/repos/JusticeGPT/cases_2PD00059_2PD00059'
 
 const BASE_DIR = path.dirname(__filename)
 
@@ -449,11 +449,19 @@ async function getStateFromCase(case_id, case_json, summary_info) {
 
   const first_conviction = convictions[0]
 
+  if (first_conviction) {
+    if (first_conviction.hasOwnProperty('lase_disposition')) {
+      state.date_of_conviction = first_conviction.lase_disposition
+    }
+    if (first_conviction.hasOwnProperty('last_disposition')) {
+      state.date_of_conviction = first_conviction.last_disposition
+    }
+  }
+
   state.case_id = case_id
   state.defendant_name = _defendant.partyName
   state.case_title = case_info.case_title
   state.charges = convictions
-  state.date_of_conviction = first_conviction.lase_disposition
   state.court_house_location = case_info.filing_courthouse
 
   state.is_misdemeanor = convictions.some((charge) => charge.charge_statute.includes('-M'))
@@ -524,6 +532,9 @@ async function main() {
   const case_map = JSON.parse(fs.readFileSync(CACHED_CASE_MAP_PATH))
   const case_ids = Object.keys(case_map)
 
+  const case_viz_path = path.join(case_output_dir, `${case_id}.md`)
+  const case_markdown = getRawJsonViz(case_json)
+
   info(`Found ${case_ids.length} cases`)
 
   const processed_map = JSON.parse(fs.readFileSync(CACHED_PROCESSED_MAP))
@@ -542,7 +553,10 @@ async function main() {
 
     const { convictions } = summary_info
 
-    if (convictions.length == 0) continue
+    if (convictions.length == 0) {
+      info(`Found ${convictions.length} convictions for case ${case_id} => not expungement elligible`)
+      fs.writeFileSync(case_viz_path, case_markdown)
+    }
 
     // ensure the case has an output dir
     if (!fs.existsSync(case_output_dir)) {
@@ -578,8 +592,6 @@ async function main() {
     const cached_state_path = path.join(case_output_dir, 'cached_state.json')
     fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
 
-    const case_viz_path = path.join(case_output_dir, `${case_id}.md`)
-    const case_markdown = getRawJsonViz(case_json)
     fs.writeFileSync(case_viz_path, case_markdown)
 
     const raw_case_json_path = path.join(case_output_dir, `${case_id}_raw.json`)
