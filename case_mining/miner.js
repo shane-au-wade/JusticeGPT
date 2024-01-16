@@ -242,4 +242,6 @@ async function main() {
   }
 }
 
-main()
+if (typeof require !== 'undefined' && require.main === module) {
+  main()
+}
