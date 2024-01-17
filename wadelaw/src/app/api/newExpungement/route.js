@@ -13,9 +13,8 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export const config = {
-  runtime: 'edge',
-}
+// export const runtime = 'edge'
+export const maxDuration = 60 // This function can run for a maximum of 60 seconds
 
 export async function POST(request) {
   const { subject, body_text, sender } = await request.json()
