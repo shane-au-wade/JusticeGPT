@@ -1,5 +1,4 @@
-import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
-await import('pdfjs-dist/build/pdf.worker.mjs')
+import { resolvePDFJS } from 'pdfjs-serverless'
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
@@ -51,6 +50,8 @@ const INIT_STATE = {
  * defendant_name: String }}
  */
 export async function getStateFromCase(case_id, case_json, origin) {
+  const pdfjs = await resolvePDFJS()
+
   const state = JSON.parse(JSON.stringify(INIT_STATE))
 
   // create service date and use this date for downstream signed dates
@@ -137,7 +138,7 @@ export async function getStateFromCase(case_id, case_json, origin) {
   const pdf_res = await fetch(
     `${origin}/courthouses/Courthouses_in_Los_Angeles_County_Contacts_and_Locations_LA_Court.pdf`
   )
-  const courthouses_pdf = await pdfjsLib.getDocument({
+  const courthouses_pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
   }).promise
@@ -802,8 +803,9 @@ export async function getPdfText(pdf) {
  * @return {Uint8Array}
  */
 export async function generateCr181(state, origin) {
+  const pdfjs = await resolvePDFJS()
   const pdf_res = await fetch(`${origin}/forms/cr181.pdf`)
-  let pdf = await pdfjsLib.getDocument({
+  let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
   }).promise
@@ -851,8 +853,9 @@ export async function generateCr181(state, origin) {
  * @returns {Uint8Array}
  */
 export async function generateCr180(state, origin) {
+  const pdfjs = await resolvePDFJS()
   const pdf_res = await fetch(`${origin}/forms/cr180.pdf`)
-  let pdf = await pdfjsLib.getDocument({
+  let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
   }).promise
@@ -1015,8 +1018,9 @@ export async function generateCr180(state, origin) {
  * @returns {Uint8Array}
  */
 export async function generateCr106(state, origin) {
+  const pdfjs = await resolvePDFJS()
   const pdf_res = await fetch(`${origin}/forms/cr106.pdf`)
-  let pdf = await pdfjsLib.getDocument({
+  let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
   }).promise
