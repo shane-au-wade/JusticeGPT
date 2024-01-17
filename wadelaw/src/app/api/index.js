@@ -230,28 +230,13 @@ export async function getRawCaseJson(case_id) {
 
   const _charges = otherCriminalInformation.charges.map((charge) => {
     const {
-      locationID,
-      caseNumber,
-      defendantID,
       countNumber,
       chargeCode,
       statuteName,
-      statuteURL,
-      pleaHistory,
-      dispositions,
       pleaHistoryDisplay,
       lastDispositionDisplay,
-      chargeDispositionDate,
       chargeDispositionDateString,
-      chargeDisposition,
-      sentenceDispositionDate,
-      sentenceDispositionDateString,
-      sentenceDisposition,
-      garbageFlag,
       dispositionCode,
-      pendingHearing,
-      warrantFlag,
-      jurisdiction,
     } = charge
 
     let _is_conviction = false
