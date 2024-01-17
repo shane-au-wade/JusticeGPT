@@ -1,4 +1,4 @@
-import { getRawCaseJson, getRawJsonViz } from '../../index'
+import { getRawCaseJson, getRawJsonViz } from './index'
 
 export async function GET(request, { params }) {
   const { case_id } = params
