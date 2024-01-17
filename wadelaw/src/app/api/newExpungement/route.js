@@ -75,7 +75,7 @@ export async function POST(request) {
   const _subject = `[WADE-LAW] Expungement for ${case_id}`
   const _message = `Here are your filled documents for\n${state.case_title}`
 
-  const mail_list = ['shane.au.wade@gmail.com']
+  const mail_list = [sender]
 
   const mail_options = {
     from: EMAIL,
