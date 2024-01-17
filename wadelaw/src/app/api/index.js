@@ -808,6 +808,7 @@ export async function generateCr181(state, origin) {
   let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
+    verbosity: 0,
   }).promise
 
   // Mapping the form field ids to the corresponding values from the client information
@@ -858,6 +859,7 @@ export async function generateCr180(state, origin) {
   let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
+    verbosity: 0,
   }).promise
 
   /**
@@ -1023,6 +1025,7 @@ export async function generateCr106(state, origin) {
   let pdf = await pdfjs.getDocument({
     url: '',
     data: await pdf_res.arrayBuffer(),
+    verbosity: 0,
   }).promise
 
   const form_data = {

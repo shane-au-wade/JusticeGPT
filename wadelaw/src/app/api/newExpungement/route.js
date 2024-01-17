@@ -24,7 +24,7 @@ export async function POST(request) {
   console.log('New Expungement request from => ', sender)
 
   const email_text = `${subject}\n${body_text}`
-  console.log(email_text)
+  console.log(`Email => `, email_text)
 
   // extract the possible case id from the body or subject
   const case_id = await generateCaseId(email_text)
@@ -35,6 +35,8 @@ export async function POST(request) {
     // failed to locate a case id in their email request
     return new Response('[WARN] No case id found in email', { status: 404 })
   }
+
+  console.log('Found case json for => ', case_id)
 
   // query the la courthouse website with the extracted case_id
   const case_json = await getRawCaseJson(case_id)
@@ -85,15 +87,12 @@ export async function POST(request) {
 
   //   console.log(mail_options)
 
-  transporter.sendMail(mail_options, function (error, info) {
-    if (error) {
-      console.log(error)
-      return new Response('Email transporter error', { status: 500 })
-    } else {
-      console.log('Email sent: ' + info.response)
-      return new Response('ok', { status: 200 })
-    }
-  })
-
-  // return new Response(200)
+  try {
+    const info = await transporter.sendMail(mail_options)
+    console.log('Email sent: ' + info.messageId)
+    return new Response('ok', { status: 200 })
+  } catch (error) {
+    console.log('Failed to send email => ', error)
+    return new Response('Email transporter error', { status: 500 })
+  }
 }
