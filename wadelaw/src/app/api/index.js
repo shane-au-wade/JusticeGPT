@@ -1076,12 +1076,12 @@ export async function generateCr106(state, origin) {
 
 async function generateAttorneyJson(text) {
   const attorney_json = {
-    name: 'Joshua Curtis Wade',
-    bar_number: '310028',
+    name: 'ATTORNEY NAME',
+    bar_number: '770077',
     bar_state: 'CA',
-    firm_name: 'The Law Office of Joshua C Wade',
-    street: '2816 Honolulu Ave #404',
-    city: 'Verdugo City',
+    firm_name: 'The Law Office of ATTORNEY NAME',
+    street: 'ATTORNEY ADDRESS',
+    city: 'ATTORNEY CITY',
     zip: '91046',
     phone: '818-823-7705',
     fax: '',
