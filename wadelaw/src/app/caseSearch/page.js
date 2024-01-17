@@ -66,7 +66,7 @@ export default function Page() {
 
             console.log(case_id)
 
-            const res = await fetch(`/getCaseViz/${case_id}`)
+            const res = await fetch(`api/getCaseViz/${case_id}`)
             const text = await res.text()
 
             setState(() => {
@@ -83,7 +83,21 @@ export default function Page() {
         {/* <Button
           icon="lab-test"
           onClick={() => {
-            console.log(state)
+            fetch('api/newExpungement', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: JSON.stringify({
+                sender: 'shane.au.wade@gmail.com',
+                subject: 'New Expungement',
+                body_text:
+                  "Hey Shane, \n\nI'd like to get expungement forms generated for case: 0EM00001.\n\nThanks,\nJosh",
+              }),
+            }).then((res) => {
+              console.log(res)
+            })
           }}
         ></Button> */}
       </div>

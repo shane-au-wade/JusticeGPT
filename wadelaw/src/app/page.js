@@ -1,5 +1,4 @@
 'use client'
-import Image from 'next/image'
 import styles from './page.module.css'
 
 // <Setup Blueprint>
@@ -9,8 +8,6 @@ import { FocusStyleManager } from '@blueprintjs/core'
 FocusStyleManager.onlyShowFocusOnTabs()
 
 import { AnchorButton } from '@blueprintjs/core'
-
-import Link from 'next/link'
 
 export default function Home() {
   return (
