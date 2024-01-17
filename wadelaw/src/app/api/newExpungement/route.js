@@ -13,6 +13,10 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+export const config = {
+  runtime: 'edge',
+}
+
 export async function POST(request) {
   const { subject, body_text, sender } = await request.json()
 
@@ -30,6 +34,7 @@ export async function POST(request) {
     console.log('No case id!')
     // email the client back, telling them we've
     // failed to locate a case id in their email request
+    return new Response('[WARN] No case id found in email', { status: 404 })
   }
 
   // query the la courthouse website with the extracted case_id
