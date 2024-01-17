@@ -53,6 +53,8 @@ export default function Page() {
         <Button
           loading={state.is_loading}
           onClick={async () => {
+            if (search_input_ref.current.value == '') return
+            if (search_input_ref.current.value == null) return
             const case_id = search_input_ref.current.value
             search_input_ref.current.value = ''
 
