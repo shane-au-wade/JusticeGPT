@@ -436,9 +436,9 @@ ${bonds.length == 0 ? '**No Bonds Information**' : getBondsText(bonds)}
 
 **Term:** ${duration}
 
-**Status:** ${lastStatus.status ?? 'No Status Info'}
+**Status:** ${lastStatus ? lastStatus.status : 'No Status Info'}
 
-**Last Updated:** ${lastStatus.statusDateDisplay ?? 'No Status Date'} 
+**Last Updated:** ${lastStatus ? lastStatus.statusDateDisplay : 'No Status Date'} 
 
 **Conditions:** 
 ${conditions
