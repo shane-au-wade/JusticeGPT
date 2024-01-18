@@ -8,8 +8,19 @@ import '@blueprintjs/icons/lib/css/blueprint-icons.css'
 import { FocusStyleManager } from '@blueprintjs/core'
 FocusStyleManager.onlyShowFocusOnTabs()
 
-import { Button, InputGroup } from '@blueprintjs/core'
+import { Button, InputGroup, Tabs, Tab } from '@blueprintjs/core'
 import { marked } from 'marked'
+
+import Head from 'next/head'
+
+// Using ES6 import syntax
+import hljs from 'highlight.js/lib/core'
+import json from 'highlight.js/lib/languages/json'
+
+import 'highlight.js/styles/stackoverflow-light.css'
+
+// Then register the languages you need
+hljs.registerLanguage('json', json)
 
 const INIT_STATE = {
   is_loading: false,
@@ -27,6 +38,14 @@ export default function Page() {
     document.querySelector('article#MARKDOWN_CONTENT').innerHTML = marked.parse(state.markdown_text)
   }, [state.markdown_text])
 
+  React.useEffect(() => {
+    if (!state.case_json) return
+
+    const highlighted_json = hljs.highlight(JSON.stringify(state.case_json, null, 2), { language: 'json' }).value
+
+    document.querySelector('pre#JSON_CONTENT').innerHTML = highlighted_json
+  }, [state.case_json])
+
   return (
     <main
       style={{
@@ -37,6 +56,9 @@ export default function Page() {
         padding: '3px',
       }}
     >
+      <Head>
+        <title>Case Search</title>
+      </Head>
       <div
         id="search"
         style={{
@@ -53,7 +75,7 @@ export default function Page() {
         <div
           style={{
             width: '100%',
-            maxWidth: "30rem",
+            maxWidth: '30rem',
             // maxWidth: '50rem',
             margin: '0 auto',
           }}
@@ -79,19 +101,21 @@ export default function Page() {
               console.log(case_id)
 
               const res = await fetch(`api/getCaseViz/${case_id}`)
-              const text = await res.text()
+              const data = await res.json()
+              const { markdown_text, case_json } = data
 
               setState(() => {
                 return {
                   is_loading: false,
-                  markdown_text: text,
+                  markdown_text: markdown_text,
+                  case_json: case_json,
                 }
               })
             }}
           >
             <InputGroup
               style={{
-                width: '100%'
+                width: '100%',
               }}
               leftIcon="search"
               inputRef={search_input_ref}
@@ -175,7 +199,10 @@ export default function Page() {
           borderRadius: '7px',
         }}
       >
-        <article id="MARKDOWN_CONTENT"></article>
+        <Tabs>
+          <Tab id="md" title="Markdown" panel={<article id="MARKDOWN_CONTENT"></article>} />
+          <Tab id="js" title="Json" panel={<pre id="JSON_CONTENT"></pre>} />
+        </Tabs>
       </div>
     </main>
   )

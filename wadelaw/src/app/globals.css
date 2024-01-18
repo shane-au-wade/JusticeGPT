@@ -98,3 +98,8 @@ th {
 tr:nth-child(even) {
   background-color: #f1f1f1;
 }
+
+
+.hljs-string {
+  text-wrap: wrap !important;
+}
