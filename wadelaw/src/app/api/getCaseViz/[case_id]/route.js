@@ -1,4 +1,4 @@
-import { getRawCaseJson, getRawJsonViz } from './index'
+import { getRawCaseJson, getRawJsonViz } from '../../index'
 
 export async function GET(request, { params }) {
   const { case_id } = params
@@ -20,7 +20,12 @@ export async function GET(request, { params }) {
     return new Response(404)
   }
 
-  const markdown_text = getRawJsonViz(case_json)
-
-  return new Response(markdown_text)
+  let markdown_text
+  try {
+    markdown_text = getRawJsonViz(case_json)
+    return new Response(markdown_text)
+  } catch (e) {
+    console.log(e)
+    return new Response('Unable to generate markdown viz', { status: 500 })
+  }
 }

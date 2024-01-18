@@ -14,6 +14,7 @@ import { marked } from 'marked'
 const INIT_STATE = {
   is_loading: false,
   markdown_text: null,
+  case_json: null,
 }
 
 export default function Page() {
@@ -31,18 +32,19 @@ export default function Page() {
       style={{
         height: '100%',
         display: 'flex',
-        flexDirection: 'row',
+        flexDirection: 'column',
+        gap: '0.25rem',
         padding: '3px',
       }}
     >
       <div
-        id="side_bar"
+        id="search"
         style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem',
           minWidth: '15rem',
-          height: '100%',
+    
           outline: '1px solid black',
           borderRadius: '7px',
           padding: '0.5rem',
@@ -83,6 +85,45 @@ export default function Page() {
         </Button>
 
         {/* <Button
+          loading={state.is_loading}
+          onClick={async () => {
+            if (search_input_ref.current.value == '') return
+            if (search_input_ref.current.value == null) return
+            const case_id = search_input_ref.current.value
+            search_input_ref.current.value = ''
+
+            setState((state) => {
+              return {
+                ...state,
+                is_loading: true,
+                markdown_text: null,
+              }
+            })
+
+            console.log(case_id)
+
+            const res = await fetch(`api/getRawCaseJson/${case_id}`)
+            const json = await res.json()
+
+            setState(() => {
+              return {
+                is_loading: false,
+                case_json: json,
+              }
+            })
+          }}
+        >
+          Raw Json
+        </Button>
+
+        <Button
+          icon="lab-test"
+          onClick={() => {
+            console.log(state)
+          }}
+        /> */}
+
+        {/* <Button
           icon="lab-test"
           onClick={() => {
             fetch('api/newExpungement', {
@@ -108,6 +149,8 @@ export default function Page() {
           height: '100%',
           overflow: 'auto',
           padding: '0.5rem',
+          outline: '1px solid black',
+          borderRadius: "7px"
         }}
       >
         <article id="MARKDOWN_CONTENT"></article>

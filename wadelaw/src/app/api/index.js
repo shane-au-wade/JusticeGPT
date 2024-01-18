@@ -299,18 +299,18 @@ export async function getRawCaseJson(case_id) {
 
 export function getRawJsonViz(case_json) {
   const {
-    parties,
-    pastProceedings,
-    registerOfActions,
+    parties = [],
+    pastProceedings = [],
+    registerOfActions = [],
     otherCriminalInformation,
-    crossReferences,
+    crossReferences = [],
     caseNumber,
     caseUTypeID,
     caseUType,
-    caseInfo,
+    caseInfo = [],
   } = case_json
 
-  const { charges, warrants, bondSettings, bonds, sentencing } = otherCriminalInformation
+  const { charges = [], warrants = [], bondSettings = [], bonds = [], sentencing = [] } = otherCriminalInformation
 
   const _defendant = parties.filter((party_member) => {
     if (party_member.partyTypeDescription.includes('Defendant')) return true
@@ -596,7 +596,7 @@ ${bonds.length == 0 ? '**No Bonds Information**' : getBondsText(bonds)}
   // probationDisplay: 'Summary Probation<ul><li><b>Term</b>: 3 years</li><li><b>Status</b>: REVOKED</li></ul>',
 
   function getProbationSummaryText(probation) {
-    const { duration, lastStatus, conditions } = probation[0]
+    const { duration, lastStatus, conditions = [] } = probation[0]
 
     return `
 ### Probation is granted.
