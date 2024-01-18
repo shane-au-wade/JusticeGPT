@@ -11,13 +11,19 @@ export async function GET(request, { params }) {
   } catch (error) {
     console.error(error)
     console.log('[ERROR] Query failed => ', case_id)
-    return new Response(500)
+    return new Response(
+      JSON.stringify({ markdown_text: '### Courthose query failed\n\nCheck case id and try again.', case_json: {} }),
+      { status: 500 }
+    )
   }
 
   if (!case_json) {
     console.log('[INFO] No data found => ', case_id)
     // if the api call fails
-    return new Response(404)
+    return new Response(
+      JSON.stringify({ markdown_text: '### Courthose query failed\n\nCheck case id and try again.', case_json: {} }),
+      { status: 500 }
+    )
   }
 
   let markdown_text

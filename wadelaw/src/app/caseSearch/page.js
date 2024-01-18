@@ -11,8 +11,6 @@ FocusStyleManager.onlyShowFocusOnTabs()
 import { Button, InputGroup, Tabs, Tab } from '@blueprintjs/core'
 import { marked } from 'marked'
 
-import Head from 'next/head'
-
 // Using ES6 import syntax
 import hljs from 'highlight.js/lib/core'
 import json from 'highlight.js/lib/languages/json'
@@ -56,9 +54,6 @@ export default function Page() {
         padding: '3px',
       }}
     >
-      <Head>
-        <title>Case Search</title>
-      </Head>
       <div
         id="search"
         style={{
