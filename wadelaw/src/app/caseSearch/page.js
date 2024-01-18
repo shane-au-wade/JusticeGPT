@@ -50,8 +50,6 @@ export default function Page() {
           padding: '0.5rem',
         }}
       >
-        <InputGroup leftIcon="search" inputRef={search_input_ref} autoCorrect="off" id="CASE_INPUT"></InputGroup>
-
         <form
           onSubmit={async (event) => {
             event.preventDefault()
@@ -83,9 +81,17 @@ export default function Page() {
             })
           }}
         >
-          <Button loading={state.is_loading} type="submit">
-            Search
-          </Button>
+          <InputGroup
+            leftIcon="search"
+            inputRef={search_input_ref}
+            autoCorrect="off"
+            id="CASE_INPUT"
+            rightElement={
+              <Button loading={state.is_loading} type="submit">
+                Search
+              </Button>
+            }
+          />
         </form>
 
         {/* <Button
