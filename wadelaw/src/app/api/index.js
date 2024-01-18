@@ -299,18 +299,18 @@ export async function getRawCaseJson(case_id) {
 
 export function getRawJsonViz(case_json) {
   const {
-    parties = [],
-    pastProceedings = [],
-    registerOfActions = [],
+    parties,
+    pastProceedings,
+    registerOfActions,
     otherCriminalInformation,
-    crossReferences = [],
+    crossReferences,
     caseNumber,
     caseUTypeID,
     caseUType,
-    caseInfo = [],
+    caseInfo,
   } = case_json
 
-  const { charges = [], warrants = [], bondSettings = [], bonds = [], sentencing = [] } = otherCriminalInformation
+  const { charges, warrants, bondSettings, bonds, sentencing } = otherCriminalInformation
 
   const _defendant = parties.filter((party_member) => {
     if (party_member.partyTypeDescription.includes('Defendant')) return true
@@ -596,19 +596,28 @@ ${bonds.length == 0 ? '**No Bonds Information**' : getBondsText(bonds)}
   // probationDisplay: 'Summary Probation<ul><li><b>Term</b>: 3 years</li><li><b>Status</b>: REVOKED</li></ul>',
 
   function getProbationSummaryText(probation) {
-    const { duration, lastStatus, conditions = [] } = probation[0]
+    const { duration, lastStatus, conditions } = probation[0]
+    const _conditions = conditions != null ? conditions : []
+    const _lastStatus =
+      lastStatus != null
+        ? lastStatus
+        : {
+            status: 'No status avaliable.',
+            statusDateDisplay: 'No date.',
+          }
+    const _duration = duration != null ? duration : 'None'
 
     return `
 ### Probation is granted.
 
-**Term:** ${duration}
+**Term:** ${_duration}
 
-**Status:** ${lastStatus.status}
+**Status:** ${_lastStatus.status}
 
-**Last Updated:** ${lastStatus.statusDateDisplay} 
+**Last Updated:** ${_lastStatus.statusDateDisplay} 
 
 **Conditions:** 
-${conditions
+${_conditions
   .map((condition) => {
     const {
       conditionID, // '16342833',
@@ -724,7 +733,7 @@ ${
 }
 
 ## Comments
-${comments.map((c) => `- ${c.comment}`).join('\n')}
+${comments != null ? comments.map((c) => `- ${c.comment}`).join('\n') : '### No Comments'}
 `
 
   // console.log(sentencing_text)
