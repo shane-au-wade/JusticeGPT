@@ -1,15 +1,18 @@
 import '.././globals.css'
 
-
 export const metadata = {
   title: 'Case Search',
   description: 'Access LA Courthouse Crimal Cases',
 }
 
-export default function RootLayout({ children }) {
+export default function Layout({ children }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <div
+      style={{
+        height: '100%',
+      }}
+    >
+      {children}
+    </div>
   )
 }
