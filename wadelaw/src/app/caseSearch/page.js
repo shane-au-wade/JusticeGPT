@@ -44,17 +44,19 @@ export default function Page() {
           flexDirection: 'column',
           gap: '0.5rem',
           minWidth: '15rem',
-    
-          outline: '1px solid black',
+
+          // outline: '1px solid black',
           borderRadius: '7px',
           padding: '0.5rem',
         }}
       >
         <InputGroup leftIcon="search" inputRef={search_input_ref} autoCorrect="off" id="CASE_INPUT"></InputGroup>
 
-        <Button
-          loading={state.is_loading}
-          onClick={async () => {
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault()
+            console.log('form submitted')
+
             if (search_input_ref.current.value == '') return
             if (search_input_ref.current.value == null) return
             const case_id = search_input_ref.current.value
@@ -81,8 +83,10 @@ export default function Page() {
             })
           }}
         >
-          Search
-        </Button>
+          <Button loading={state.is_loading} type="submit">
+            Search
+          </Button>
+        </form>
 
         {/* <Button
           loading={state.is_loading}
@@ -149,8 +153,8 @@ export default function Page() {
           height: '100%',
           overflow: 'auto',
           padding: '0.5rem',
-          outline: '1px solid black',
-          borderRadius: "7px"
+          // outline: '1px solid black',
+          borderRadius: '7px',
         }}
       >
         <article id="MARKDOWN_CONTENT"></article>
