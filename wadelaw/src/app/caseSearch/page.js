@@ -50,49 +50,61 @@ export default function Page() {
           padding: '0.5rem',
         }}
       >
-        <form
-          onSubmit={async (event) => {
-            event.preventDefault()
-            console.log('form submitted')
-
-            if (search_input_ref.current.value == '') return
-            if (search_input_ref.current.value == null) return
-            const case_id = search_input_ref.current.value
-            search_input_ref.current.value = ''
-
-            setState((state) => {
-              return {
-                ...state,
-                is_loading: true,
-                markdown_text: null,
-              }
-            })
-
-            console.log(case_id)
-
-            const res = await fetch(`api/getCaseViz/${case_id}`)
-            const text = await res.text()
-
-            setState(() => {
-              return {
-                is_loading: false,
-                markdown_text: text,
-              }
-            })
+        <div
+          style={{
+            width: '100%',
+            maxWidth: "30rem",
+            // maxWidth: '50rem',
+            margin: '0 auto',
           }}
         >
-          <InputGroup
-            leftIcon="search"
-            inputRef={search_input_ref}
-            autoCorrect="off"
-            id="CASE_INPUT"
-            rightElement={
-              <Button loading={state.is_loading} type="submit">
-                Search
-              </Button>
-            }
-          />
-        </form>
+          <form
+            onSubmit={async (event) => {
+              event.preventDefault()
+              console.log('form submitted')
+
+              if (search_input_ref.current.value == '') return
+              if (search_input_ref.current.value == null) return
+              const case_id = search_input_ref.current.value
+              search_input_ref.current.value = ''
+
+              setState((state) => {
+                return {
+                  ...state,
+                  is_loading: true,
+                  markdown_text: null,
+                }
+              })
+
+              console.log(case_id)
+
+              const res = await fetch(`api/getCaseViz/${case_id}`)
+              const text = await res.text()
+
+              setState(() => {
+                return {
+                  is_loading: false,
+                  markdown_text: text,
+                }
+              })
+            }}
+          >
+            <InputGroup
+              style={{
+                width: '100%'
+              }}
+              leftIcon="search"
+              inputRef={search_input_ref}
+              autoCorrect="off"
+              id="CASE_INPUT"
+              rightElement={
+                <Button loading={state.is_loading} type="submit">
+                  Search
+                </Button>
+              }
+            />
+          </form>
+        </div>
 
         {/* <Button
           loading={state.is_loading}
