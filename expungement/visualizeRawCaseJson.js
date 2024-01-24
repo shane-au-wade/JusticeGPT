@@ -156,9 +156,9 @@ ${charges_text_arr.join('\n')}
   // console.log(charges_text)
   case_markdown.push(charges_text)
 
-  case_markdown.push(`# Proceedings`)
-
   const future_proceedings = `
+# Proceedings
+
 ## Future Proceedings
 
 **NO FUTURE EVENTS** Future events are not being rendered ~ SW
@@ -194,12 +194,10 @@ ${pastProceedings
     )} | ${proceedingType} | ${proceedingResult} | ${location} | ${department} |`
   })
   .join('\n')}
-  `
+`
 
   // console.log(past_proceedings)
   case_markdown.push(past_proceedings)
-
-  case_markdown.push(`# Bail`)
 
   let USDollar = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -207,6 +205,8 @@ ${pastProceedings
   })
 
   const custody_status = `
+# Bail
+
 ## Custody Status
 
 | Date | Type | Group Type | Bail Amount | Warrant ID |
@@ -293,7 +293,56 @@ ${bonds.length == 0 ? '**No Bonds Information**' : getBondsText(bonds)}
     programs,
     confinements,
     comments,
-  } = sentencing[0]
+  } =
+    sentencing.length >= 1
+      ? sentencing[0]
+      : {
+          sentenceType: '',
+          sentenceDate: '',
+          sentenceDateDisplay: '',
+          judicialOfficer: '',
+          amendReason: '',
+          chargeNumber: '',
+          chargeDescription: '',
+          probation: [
+            {
+              probationType: '',
+              duration: '',
+              conditions: [],
+              excludeTollingDays: true,
+              conditionsDisplay: '',
+              statuses: [
+                {
+                  probationStatusCollectionID: '',
+                  probationStatusCode: '',
+                  status: '',
+                  statusDate: '',
+                  statusDateObject: '',
+                  statusDateDisplay: '',
+                },
+              ],
+              statusesDisplay: '',
+              lastStatus: {
+                probationStatusCollectionID: '',
+                probationStatusCode: '',
+                status: '',
+                statusDate: '',
+                statusDateObject: '',
+                statusDateDisplay: '',
+              },
+              probationDisplay: '',
+            },
+          ],
+          driversLicenseConditions: [],
+          programs: [],
+          confinements: [],
+          comments: [],
+          commentsDisplay: '',
+          probationDisplay: '',
+          driversLicenseConditionsDisplay: '',
+          programsDisplay: '',
+          confinementsDisplay: '',
+        }
 
   // sentenceType: 'Post Disposition Proceeding',
   // sentenceDate: '2021-05-25T00:00:00',
@@ -322,18 +371,27 @@ ${bonds.length == 0 ? '**No Bonds Information**' : getBondsText(bonds)}
 
   function getProbationSummaryText(probation) {
     const { duration, lastStatus, conditions } = probation[0]
+    const _conditions = conditions != null ? conditions : []
+    const _lastStatus =
+      lastStatus != null
+        ? lastStatus
+        : {
+            status: 'No status avaliable.',
+            statusDateDisplay: 'No date.',
+          }
+    const _duration = duration != null ? duration : 'None'
 
     return `
 ### Probation is granted.
 
-**Term:** ${duration}
+**Term:** ${_duration}
 
-**Status:** ${lastStatus.status}
+**Status:** ${_lastStatus.status}
 
-**Last Updated:** ${lastStatus.statusDateDisplay} 
+**Last Updated:** ${_lastStatus.statusDateDisplay} 
 
 **Conditions:** 
-${conditions
+${_conditions
   .map((condition) => {
     const {
       conditionID, // '16342833',
@@ -356,8 +414,8 @@ ${conditions
 
     return `
 - ${comment}
-  - ${conditionType} effective ${effectiveDateStartDisplay}
-  - Active on ${statusDateDisplay}
+- ${conditionType} effective ${effectiveDateStartDisplay}
+- Active on ${statusDateDisplay}
 `
   })
   .join('\n')}
@@ -376,7 +434,7 @@ ${conditions
 
         return `
 - **${description}**
-  - **Type:** ${confinementType}
+- **Type:** ${confinementType}
 
 ${durations.map((pair) => `- ${pair.key}: ${pair.value}`).join('\n')}`
       })
@@ -399,8 +457,8 @@ ${durations.map((pair) => `- ${pair.key}: ${pair.value}`).join('\n')}`
 
         return `
 - **Program Type:** ${description} 
-  - **Ordered:** ${ordered}
-  - **Recommended:** ${recommended}`
+- **Ordered:** ${ordered}
+- **Recommended:** ${recommended}`
       })
       .join('\n')
   }
@@ -449,14 +507,14 @@ ${
 }
 
 ## Comments
-${comments.map((c) => `- ${c.comment}`).join('\n')}
+${comments != null ? comments.map((c) => `- ${c.comment}`).join('\n') : '### No Comments'}
 `
 
   // console.log(sentencing_text)
 
   case_markdown.push(sentencing_text)
 
-  return case_markdown.join('\n')
+  return case_markdown.join('\n <br>\n ')
 }
 
 exports.getRawJsonViz = getRawJsonViz

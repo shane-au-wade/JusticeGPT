@@ -13,7 +13,11 @@ const openai = new OpenAI({
 
 // CONSTANTS
 
-const CASES_DIR = '/home/shane/repos/JusticeGPT/cases_2PD00059_2PD00059'
+// previously processed weeked of 01/10
+// const CASES_DIR = '/home/shane/repos/JusticeGPT/cases_2PD00059_2PD00059'
+
+// processed on 1/18/2024
+const CASES_DIR = '/home/shane/repos/JusticeGPT/cases_9WC00001_9WC00200'
 
 const BASE_DIR = path.dirname(__filename)
 
@@ -467,15 +471,19 @@ async function getStateFromCase(case_id, case_json, summary_info) {
   state.is_misdemeanor = convictions.some((charge) => charge.charge_statute.includes('-M'))
   state.is_felony = convictions.some((charge) => charge.charge_statute.includes('-F'))
 
-  state.is_probation_granted = sentencing.probation.length >= 1
+  state.is_probation_granted = sentencing ? sentencing.probation.length >= 1 : false
 
-  const probation_info = sentencing.probation[0]
+  const probation_info = sentencing ? sentencing.probation[0] : null
 
   if (probation_info) {
     state.probation_status = probation_info.statuses.at(-1).status
   }
 
-  if (sentencing.sentenceType.toLowerCase().includes('denied')) {
+  if (
+    probation_info == null ||
+    sentencing.sentenceType == null ||
+    sentencing?.sentenceType?.toLowerCase().includes('denied')
+  ) {
     state.probation_status = 'DENIED'
   }
 
@@ -532,9 +540,6 @@ async function main() {
   const case_map = JSON.parse(fs.readFileSync(CACHED_CASE_MAP_PATH))
   const case_ids = Object.keys(case_map)
 
-  const case_viz_path = path.join(case_output_dir, `${case_id}.md`)
-  const case_markdown = getRawJsonViz(case_json)
-
   info(`Found ${case_ids.length} cases`)
 
   const processed_map = JSON.parse(fs.readFileSync(CACHED_PROCESSED_MAP))
@@ -542,6 +547,7 @@ async function main() {
   for (const [index, case_id] of case_ids.entries()) {
     if (processed_map[case_id]) {
       info(`Already processed => ${case_id}`)
+      continue
     }
 
     const case_output_dir = path.join(OUTPUT_DIR, case_id)
@@ -555,7 +561,8 @@ async function main() {
 
     if (convictions.length == 0) {
       info(`Found ${convictions.length} convictions for case ${case_id} => not expungement elligible`)
-      fs.writeFileSync(case_viz_path, case_markdown)
+      processed_map[case_id] = true
+      continue
     }
 
     // ensure the case has an output dir
@@ -592,6 +599,8 @@ async function main() {
     const cached_state_path = path.join(case_output_dir, 'cached_state.json')
     fs.writeFileSync(cached_state_path, JSON.stringify(state, null, 2))
 
+    const case_viz_path = path.join(case_output_dir, `${case_id}.md`)
+    const case_markdown = getRawJsonViz(case_json)
     fs.writeFileSync(case_viz_path, case_markdown)
 
     const raw_case_json_path = path.join(case_output_dir, `${case_id}_raw.json`)
