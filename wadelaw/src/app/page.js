@@ -6,7 +6,7 @@ import Image from 'next/image'
 // <Setup Blueprint>
 import '@blueprintjs/core/lib/css/blueprint.css'
 import '@blueprintjs/icons/lib/css/blueprint-icons.css'
-import { FocusStyleManager } from '@blueprintjs/core'
+import { AnchorButton, Button, FocusStyleManager } from '@blueprintjs/core'
 FocusStyleManager.onlyShowFocusOnTabs()
 
 import { TopBar } from '@/components'
@@ -140,6 +140,30 @@ export default function Home() {
           </h1>
           <br />
           <h3>Joshua.c.wade@gmail.com | 818-823-7705</h3>
+          <br />
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <AnchorButton
+              href="tel:+1818-823-7705"
+              large
+              text="Call"
+              icon="phone-call"
+              style={{ borderRadius: '7px' }}
+            />
+            <AnchorButton
+              href="sms:+1818-823-7705"
+              large
+              text="Text"
+              icon="mobile-phone"
+              style={{ borderRadius: '7px' }}
+            />
+            <AnchorButton
+              href="mailto:joshua.c.wade@gmail.com"
+              large
+              text="Email"
+              icon="envelope"
+              style={{ borderRadius: '7px' }}
+            />
+          </div>
         </div>
       </CenteredSection>
       <br />
