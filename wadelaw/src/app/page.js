@@ -132,7 +132,7 @@ export default function Home() {
             textWrap: 'balance',
             padding: '1rem',
             borderRadius: '7px',
-            background: '#fff'
+            background: '#fff',
           }}
         >
           <h1>
@@ -215,7 +215,7 @@ export default function Home() {
                   <img style={{ marginLeft: '0.5rem' }} height="24" width="24" src={LinkedIcon.src} />
                 </a>
                 <a href="https://www.shanewade.dev" target="_blank">
-                  <span style={{ fontSize: '1rem' }}>www.shanewade.dev</span>
+                  <span style={{ fontSize: '1rem' }}>shanewade.dev</span>
                 </a>
               </h2>
               <br />
