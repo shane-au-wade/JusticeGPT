@@ -73,22 +73,24 @@
   } */
 /* } */
 
+html,
+body {
+  width: 100%;
+}
+
 * {
-  /* box-sizing: border-box; */
+  box-sizing: border-box;
   padding: 0;
   margin: 0;
-  min-width: 0;
+  /* min-width: 0; */
+}
+
+img {
+  border-radius: 7px;
 }
 
 ul {
   padding-left: 1rem;
-}
-
-html,
-body {
-  max-width: 100vw;
-  /* overflow-x: hidden; */
-  height: 100%;
 }
 
 th {
@@ -99,7 +101,79 @@ tr:nth-child(even) {
   background-color: #f1f1f1;
 }
 
-
 .hljs-string {
   text-wrap: wrap !important;
+}
+
+.flex_row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex_column {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo_container {
+  padding-left: 0.75rem;
+}
+
+@media screen and (min-width: 45rem) {
+  #problem_solution {
+    flex-wrap: nowrap;
+    /* outline: 2px red solid; */
+  }
+
+  #three_benifits {
+    flex-wrap: nowrap !important;
+  }
+
+  #hero_carousel {
+    max-width: 29rem !important;
+  }
+
+  #hero_carousel {
+    max-width: 29rem !important;
+  }
+
+  .blog_post {
+    display: inline !important;
+  }
+
+  .blog_img {
+    max-height: 9.5rem !important;
+    max-width: 9.5rem !important;
+  }
+
+  .carousel_img {
+    height: 29rem !important;
+    width: 29rem !important;
+  }
+
+  .big_screen_row {
+    flex-direction: row !important;
+    /* outline: 2px red solid; */
+  }
+
+  .hero_content {
+    width: 50%;
+  }
+
+  .logo_container {
+    padding-left: 2rem;
+  }
+
+  .service_info {
+    flex-wrap: nowrap !important;
+  }
+
+  .service_info_card {
+    max-width: 30rem !important;
+  }
+}
+
+::backdrop {
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }

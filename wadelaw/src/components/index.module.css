@@ -1,0 +1,15 @@
+
+
+.mobile_menu {
+    display: none;
+}
+
+@media screen and (max-width: 45rem) {
+  .mobile_menu {
+    display: block;
+  }
+
+  .desktop_menu {
+    display: none;
+  }
+}
