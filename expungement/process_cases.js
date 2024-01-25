@@ -426,7 +426,7 @@ async function getStateFromCase(case_id, case_json, summary_info) {
 
   // create service date and use this date for downstream signed dates
   const service_date = new Date()
-  service_date.setDate(service_date.getDate() + 1)
+  service_date.setDate(service_date.getDate() + 2)
   state.service_date = service_date.toLocaleDateString({ timeZone: 'America/Los Angeles' })
 
   info(`Service date => ${state.service_date}`)
@@ -533,6 +533,9 @@ async function getStateFromCase(case_id, case_json, summary_info) {
   return state
 }
 
+const PROCESSED_QUOTA = 25
+let processed_count = 0
+
 async function main() {
   info(`Processing case in\n\t=> ${CASES_DIR}`)
   info(`Using case_map_cache\n\t=> ${CACHED_CASE_MAP_PATH}`)
@@ -545,6 +548,11 @@ async function main() {
   const processed_map = JSON.parse(fs.readFileSync(CACHED_PROCESSED_MAP))
 
   for (const [index, case_id] of case_ids.entries()) {
+    if (processed_count == PROCESSED_QUOTA) {
+      info(`Processed quota satisfied => ${processed_count + 1}/${PROCESSED_QUOTA}`)
+      break
+    }
+
     if (processed_map[case_id]) {
       info(`Already processed => ${case_id}`)
       continue
@@ -608,7 +616,11 @@ async function main() {
 
     processed_map[case_id] = true
     fs.writeFileSync(CACHED_PROCESSED_MAP, JSON.stringify(processed_map))
+
+    ++processed_count
   }
+
+  console.log('[DONE]')
 }
 
 if (typeof require !== 'undefined' && require.main === module) {
