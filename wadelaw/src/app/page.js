@@ -22,7 +22,7 @@ function CenteredSection(props) {
         margin: '0 auto',
         display: 'flex',
         flexDirection: !!column ? 'column' : 'row',
-        padding: '0.5rem',
+        padding: '0.75rem',
         ...style,
       }}
     >
@@ -35,11 +35,10 @@ export default function Home() {
   return (
     <main className="dotted">
       <TopBar selectedTabId="HOME" />
-      <CenteredSection style={{ minHeight: '20rem', flexWrap: 'wrap', gap: '2rem', marginTop: '3rem' }}>
+      <CenteredSection style={{ minHeight: '20rem', flexWrap: 'wrap', gap: '2rem', marginTop: '2rem' }}>
         <div
+          className={styles.heroText}
           style={{
-            // width: '35%',
-            width: '80%',
             textWrap: 'balance',
             margin: 'auto',
           }}
@@ -58,6 +57,7 @@ export default function Home() {
         </div>
         <div
           style={{
+            margin: 'auto',
             display: 'flex',
             padding: '1rem 1rem 1rem 0',
           }}
@@ -72,18 +72,24 @@ export default function Home() {
           >
             <div style={{ margin: 'auto' }}>
               <Image priority height={220} width={220} src={'/joshua_wade.jpg'} />
-              <p>Joshua Wade, Attorney</p>
+              <p>
+                Joshua Wade,
+                <br /> Attorney
+              </p>
             </div>
             <div style={{ margin: 'auto' }}>
               <Image priority height={220} width={220} src={'/shane_wade.jpg'} />
-              <p>Shane Wade, Software Engineer</p>
+              <p>
+                Shane Wade,
+                <br /> Software Engineer
+              </p>
             </div>
           </div>
         </div>
       </CenteredSection>
       <CenteredSection
         style={{
-          height: '15rem',
+          height: '18rem',
         }}
       >
         <div
@@ -101,11 +107,10 @@ export default function Home() {
               fontSize: '1.1rem',
             }}
           >
-            <ul>
+            <ul style={{ marginLeft: '1rem' }}>
               <li>Assest Forfeiture</li>
               <li>Traffic Tickets</li>
               <li>DUI Defense</li>
-
               <li>Domestic Violence</li>
             </ul>
             <ul>
@@ -118,21 +123,31 @@ export default function Home() {
           </div>
         </div>
       </CenteredSection>
-      <CenteredSection style={{ minHeight: '10rem' }}>
+      <CenteredSection style={{ minHeight: '15rem' }}>
         <div
           style={{
             margin: 'auto',
             width: '35rem',
+            outline: '2px solid black',
+            textWrap: 'balance',
+            padding: '1rem',
+            borderRadius: '7px',
+            background: '#fff'
           }}
         >
-          <h1>Call, Text, or Email for a Free Consultation</h1>
+          <h1>
+            Call, Text, or Email for a <u>Free Consultation</u>
+          </h1>
           <br />
           <h3>Joshua.c.wade@gmail.com | 818-823-7705</h3>
         </div>
       </CenteredSection>
+      <br />
+      <br />
+      <br />
       <CenteredSection
         style={{
-          height: '30rem',
+          minHeight: '30rem',
         }}
       >
         <div
@@ -157,7 +172,7 @@ export default function Home() {
           >
             <div
               style={{
-                maxWidth: '22rem',
+                maxWidth: '24rem',
               }}
             >
               <h2
@@ -191,7 +206,7 @@ export default function Home() {
             </div>
             <div
               style={{
-                maxWidth: '22rem',
+                maxWidth: '24rem',
               }}
             >
               <h2 style={{ display: 'flex', gap: '0.5rem' }}>
@@ -218,6 +233,18 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+      </CenteredSection>
+      <CenteredSection style={{ minHeight: '10rem' }}>
+        <div
+          style={{
+            margin: 'auto',
+            display: 'flex',
+            gap: '1rem',
+          }}
+        >
+          <a href="/">Home</a>
+          <a href="/caseSearch">Case Search</a>
         </div>
       </CenteredSection>
     </main>

@@ -1,17 +1,7 @@
-.main {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6rem;
-  min-height: 100vh;
-}
+.heroText {
+  width: 80%;
 
-.logo {
-  width: fit-content;
-  outline: 2px solid black;
-  padding: 0.5rem;
-  border-radius: 7px;
-  font-size: 1.6rem;
-  box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+  @media screen and (min-width: 700px) {
+    width: 35%;
+  }
 }
