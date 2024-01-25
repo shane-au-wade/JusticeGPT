@@ -144,21 +144,21 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <AnchorButton
               href="tel:+1818-823-7705"
-              large
+              // large
               text="Call"
               icon="phone-call"
               style={{ borderRadius: '7px' }}
             />
             <AnchorButton
               href="sms:+1818-823-7705"
-              large
+              // large
               text="Text"
               icon="mobile-phone"
               style={{ borderRadius: '7px' }}
             />
             <AnchorButton
               href="mailto:joshua.c.wade@gmail.com"
-              large
+              // large
               text="Email"
               icon="envelope"
               style={{ borderRadius: '7px' }}

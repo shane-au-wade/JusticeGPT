@@ -5,7 +5,7 @@ import React from 'react'
 // <Setup Blueprint>
 import '@blueprintjs/core/lib/css/blueprint.css'
 import '@blueprintjs/icons/lib/css/blueprint-icons.css'
-import { FocusStyleManager } from '@blueprintjs/core'
+import { AnchorButton, FocusStyleManager } from '@blueprintjs/core'
 FocusStyleManager.onlyShowFocusOnTabs()
 
 import { Button, InputGroup, Tabs, Tab } from '@blueprintjs/core'
@@ -51,9 +51,15 @@ export default function Page() {
         display: 'flex',
         flexDirection: 'column',
         gap: '0.25rem',
-        padding: '3px',
       }}
     >
+      <div
+        style={{
+          padding: '0.5rem',
+        }}
+      >
+        <AnchorButton href="/" small minimal text="Home" icon={'undo'} />
+      </div>
       <div
         id="search"
         style={{
@@ -189,7 +195,7 @@ export default function Page() {
         style={{
           height: '100%',
           overflow: 'auto',
-          padding: '0.5rem',
+          padding: '0.75rem',
           // outline: '1px solid black',
           borderRadius: '7px',
         }}

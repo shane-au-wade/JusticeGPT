@@ -106,7 +106,7 @@ tr:nth-child(even) {
 }
 
 .hljs-string {
-  text-wrap: wrap !important;
+  text-wrap: balance !important;
 }
 
 .flex_row {

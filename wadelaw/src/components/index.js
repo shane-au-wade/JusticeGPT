@@ -221,6 +221,13 @@ const TopBar = (props) => {
                         }}
                       />
                       <MenuItem
+                        text="Case Search"
+                        large
+                        onClickCapture={() => {
+                          router.push('/caseSearch')
+                        }}
+                      />
+                      <MenuItem
                         text="Contact Us"
                         large
                         onClickCapture={() => {
@@ -249,6 +256,13 @@ const TopBar = (props) => {
                     title="Home"
                     onClickCapture={() => {
                       router.push('/')
+                    }}
+                  />
+                  <Tab
+                    id="CASE_SEARCH"
+                    title="Case Search"
+                    onClickCapture={() => {
+                      router.push('/caseSearch')
                     }}
                   />
                   <Tab
