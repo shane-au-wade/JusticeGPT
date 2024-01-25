@@ -11,13 +11,19 @@ FocusStyleManager.onlyShowFocusOnTabs()
 
 import { TopBar } from '@/components'
 
+import LinkedIcon from 'remixicon/icons/Logos/linkedin-box-fill.svg'
+
 function CenteredSection(props) {
-  const { maxWidth, children } = props
+  const { maxWidth, column, children, style } = props
   return (
     <section
       style={{
         maxWidth: maxWidth ? maxWidth : '65rem',
         margin: '0 auto',
+        display: 'flex',
+        flexDirection: !!column ? 'column' : 'row',
+        padding: '0.5rem',
+        ...style,
       }}
     >
       {children}
@@ -27,85 +33,192 @@ function CenteredSection(props) {
 
 export default function Home() {
   return (
-    <main>
+    <main className="dotted">
       <TopBar selectedTabId="HOME" />
-      <CenteredSection>
-        <div style={{ display: 'flex', height: '20rem' }}>
-          <div
+      <CenteredSection style={{ minHeight: '20rem', flexWrap: 'wrap', gap: '2rem', marginTop: '3rem' }}>
+        <div
+          style={{
+            // width: '35%',
+            width: '80%',
+            textWrap: 'balance',
+            margin: 'auto',
+          }}
+        >
+          <h1
             style={{
-              width: '35%',
-              textWrap: 'balance',
-              display: 'grid',
-              margin: '0 auto',
+              fontSize: '1.75rem',
             }}
           >
-            <div
-              style={{
-                alignSelf: 'center',
-              }}
-            >
-              <h1>Resolve your LA County criminal case, afforably and efficiently.</h1>
-              <br></br>
-              <h3>
-                We provide legal services, powered by modern technology. Proudly serving Los Angeles County since 2016.
-              </h3>
-            </div>
-          </div>
-          <div
-            style={{
-              display: 'grid',
-            }}
-          >
-            <div
-              style={{
-                alignSelf: 'center',
-                display: 'flex',
-                gap: '1rem',
-              }}
-            >
-              <div>
-                <Image priority height={220} width={220} src={'/joshua_wade.jpg'} />
-                <p>Joshua Wade, Attorney</p>
-              </div>
-              <div>
-                <Image priority height={220} width={220} src={'/shane_wade.jpg'} />
-                <p>Shane Wade, Software Engineer</p>
-              </div>
-            </div>
-          </div>
+            Resolve your LA County criminal case, afforably and efficiently.
+          </h1>
+          <br></br>
+          <h3 style={{ fontSize: '1.2rem' }}>
+            We provide legal services, powered by modern technology. Proudly serving Los Angeles County since 2016.
+          </h3>
         </div>
-      </CenteredSection>
-      <CenteredSection maxWidth={'30rem'}>
-        <h1>Criminal Cases We Take</h1>
-        <br />
         <div
           style={{
             display: 'flex',
-            gap: '2rem',
+            padding: '1rem 1rem 1rem 0',
           }}
         >
-          <ul>
-            <li>DUI Defense</li>
-            <li>Possession of Drugs</li>
-            <li>Possession of a Weapon</li>
-            <li>Domestic Violence</li>
-          </ul>
-          <ul>
-            <li>Clearing Criminal Record</li>
-            <li>Sex Crimes</li>
-            <li>And Other Criminal Criminal Cases</li>
-          </ul>
+          <div
+            style={{
+              margin: 'auto',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div style={{ margin: 'auto' }}>
+              <Image priority height={220} width={220} src={'/joshua_wade.jpg'} />
+              <p>Joshua Wade, Attorney</p>
+            </div>
+            <div style={{ margin: 'auto' }}>
+              <Image priority height={220} width={220} src={'/shane_wade.jpg'} />
+              <p>Shane Wade, Software Engineer</p>
+            </div>
+          </div>
         </div>
       </CenteredSection>
-      <br />
-      <br />
-      <CenteredSection maxWidth={'30rem'}>
-        <h1>Call, Text, or Email for a Free Consultation</h1>
-        <br />
-        <h3>Joshua.c.wade@gmail.com | 818-823-7705</h3>
+      <CenteredSection
+        style={{
+          height: '15rem',
+        }}
+      >
+        <div
+          style={{
+            margin: 'auto',
+            width: '35rem',
+          }}
+        >
+          <h1>Criminal Cases We Take</h1>
+          <br />
+          <div
+            style={{
+              display: 'flex',
+              gap: '2rem',
+              fontSize: '1.1rem',
+            }}
+          >
+            <ul>
+              <li>Assest Forfeiture</li>
+              <li>Traffic Tickets</li>
+              <li>DUI Defense</li>
+
+              <li>Domestic Violence</li>
+            </ul>
+            <ul>
+              <li>Clearing Criminal Record</li>
+              <li>Possession of Drugs</li>
+              <li>Possession of a Weapon</li>
+
+              <li>And Other Criminal Cases</li>
+            </ul>
+          </div>
+        </div>
       </CenteredSection>
-      <CenteredSection>
-        <h1>About Us</h1>
+      <CenteredSection style={{ minHeight: '10rem' }}>
+        <div
+          style={{
+            margin: 'auto',
+            width: '35rem',
+          }}
+        >
+          <h1>Call, Text, or Email for a Free Consultation</h1>
+          <br />
+          <h3>Joshua.c.wade@gmail.com | 818-823-7705</h3>
+        </div>
+      </CenteredSection>
+      <CenteredSection
+        style={{
+          height: '30rem',
+        }}
+      >
+        <div
+          style={{
+            margin: 'auto',
+          }}
+        >
+          <h1>About Us</h1>
+          <hr
+            style={{
+              // marginTop: '0.1rem',
+              marginBottom: '1rem',
+            }}
+          />
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              textWrap: 'balance',
+            }}
+          >
+            <div
+              style={{
+                maxWidth: '22rem',
+              }}
+            >
+              <h2
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                }}
+              >
+                Joshua Wade{' '}
+                <a href="https://www.linkedin.com/in/joshuawadepatent/" target="_blank">
+                  <img style={{ marginLeft: '0.5rem' }} height="24" width="24" src={LinkedIcon.src} />
+                </a>
+                <a href="https://apps.calbar.ca.gov/attorney/Licensee/Detail/310028" target="_blank">
+                  <span style={{ fontSize: '1rem' }}>Bar No. 310028</span>
+                </a>
+              </h2>
+              <br />
+              <p>
+                Joshua has been serving the Los Angeles County area since 2016. He was born and raised in Glendale, CA
+                and graduated from Loyola Law School.
+              </p>
+              <p>
+                Over his 8 years of service, Joshua has worked thousands of traffic cases, many cases were resolved with
+                a dismissal and other saw a reduction in the fine. He has also worked thousands of misdemeanor and
+                felony cases.
+              </p>
+              <p>
+                Joshua Wade is an experienced criminal defense attorney who is trusted by thousands of residents in Los
+                Angeles.
+              </p>
+            </div>
+            <div
+              style={{
+                maxWidth: '22rem',
+              }}
+            >
+              <h2 style={{ display: 'flex', gap: '0.5rem' }}>
+                Shane Wade{' '}
+                <a href="https://www.linkedin.com/in/shane-au-wade/" target="_blank">
+                  <img style={{ marginLeft: '0.5rem' }} height="24" width="24" src={LinkedIcon.src} />
+                </a>
+                <a href="https://www.shanewade.dev" target="_blank">
+                  <span style={{ fontSize: '1rem' }}>www.shanewade.dev</span>
+                </a>
+              </h2>
+              <br />
+              <p>
+                Shane is a results-oriented software engineer with 4+ years of experience in developing and implementing
+                high-quality software solutions.
+              </p>
+              <p>
+                He is adaptable and self-motivated, with a strong track record of delivering projects on time and
+                exceeding expectations.
+              </p>
+              <p>
+                Shane aims to help the Los Angeles community by building software to enable efficient and affordable
+                interactions between Attorneys, Clients, and the Justice System.
+              </p>
+            </div>
+          </div>
+        </div>
       </CenteredSection>
     </main>
   )

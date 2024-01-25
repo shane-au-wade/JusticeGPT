@@ -190,7 +190,7 @@ const TopBar = (props) => {
                 // height: '1.5rem',
                 width: '8rem',
                 textAlign: 'center',
-                padding: '0.4rem',
+                padding: '0.5rem 0.4rem 0.4rem 0.4rem',
                 // width: '10rem',
                 outline: '2px solid black',
                 borderRadius: '7px',

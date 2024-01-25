@@ -177,3 +177,9 @@ tr:nth-child(even) {
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 }
+
+
+.dotted {
+    background-image: radial-gradient(circle at 1px 1px, #eaddc1 1px, transparent 0);
+    background-size: 50px 50px;
+}
