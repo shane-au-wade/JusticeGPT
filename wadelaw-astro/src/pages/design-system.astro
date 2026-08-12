@@ -46,7 +46,7 @@ const tableOfContents = [
       </p>
     </header>
 
-    <div class="lk-space-xl flex flex-col lg:flex-row lg:items-start">
+    <div class="lk-space-2xl flex flex-col lg:flex-row lg:items-start">
       <!-- Sticky table of contents -->
       <aside class="shrink-0 lg:sticky lg:top-8 lg:w-56">
         <nav aria-label="On this page">
@@ -65,7 +65,8 @@ const tableOfContents = [
         </nav>
       </aside>
 
-      <div class="min-w-0 flex-1">
+      <div class="lk-space-xl flex flex-col min-w-0 flex-1">
+        <Spacer/>
         <!-- Theme switcher -->
         <section id="themes" class="mb-14 scroll-mt-8">
           <h2 class="mb-4 text-2xl font-semibold">Themes</h2>
@@ -143,8 +144,6 @@ const tableOfContents = [
           </div>
         </section>
 
-        <Spacer size="2xl" />
-
         <!-- Typography -->
         <section id="typography" class="mb-14 scroll-mt-8">
           <h2 class="mb-4 text-2xl font-semibold">Typography</h2>
@@ -164,9 +163,7 @@ const tableOfContents = [
         <!-- Spacing -->
         <div id="spacing" class="scroll-mt-8">
           <SpacingScaleSection />
-          <Spacer size="2xl" />
           <SpacingLawsSection />
-          <Spacer size="2xl" />
           <ProximityInPracticeSection />
         </div>
 

@@ -1,5 +1,34 @@
 ---
 import DesignSystemSection from "@components/design-system/DesignSystemSection.astro"
+
+// Shared node layout for laws 1 & 2 — a rough square with a center node so the
+// complete graph reads clearly. Colors use semantic tokens (theme-aware).
+const nodes = [
+  { id: "a", x: 58, y: 58, cls: "fill-primary" },
+  { id: "b", x: 182, y: 58, cls: "fill-secondary" },
+  { id: "c", x: 120, y: 118, cls: "fill-accent" },
+  { id: "d", x: 58, y: 178, cls: "fill-warning" },
+  { id: "e", x: 182, y: 178, cls: "fill-info" },
+]
+
+// Every pair of nodes → the complete graph (Law 1: everything relates).
+const edges = nodes.flatMap((from, i) =>
+  nodes.slice(i + 1).map((to) => ({ from, to, key: `${from.id}${to.id}` })),
+)
+
+// Law 2: relationship strength is hierarchical. Anything unlisted is "weak".
+const strengths: Record<string, "strong" | "medium"> = {
+  ab: "strong",
+  cd: "strong",
+  ac: "medium",
+  be: "medium",
+}
+
+const edgeStyle = {
+  strong: { cls: "stroke-base-content/70", width: 3 },
+  medium: { cls: "stroke-base-content/40", width: 2 },
+  weak: { cls: "stroke-base-content/15", width: 1.25 },
+}
 ---
 
 <DesignSystemSection
@@ -10,123 +39,179 @@ import DesignSystemSection from "@components/design-system/DesignSystemSection.a
   <div class="grid gap-6 md:grid-cols-3">
     <!-- Law 1: Relatedness -->
     <div class="card bg-base-100 border-base-200 border shadow-sm">
-      <figure class="bg-base-200 px-4 pt-4">
-        <svg
-          viewBox="0 0 200 120"
-          class="h-32 w-full"
-          role="img"
-          aria-label="Elements sharing a single viewport are related"
-        >
-          <rect
-            x="4"
-            y="4"
-            width="192"
-            height="112"
-            rx="8"
-            class="fill-base-100 stroke-base-300"
-            stroke-width="2"></rect>
-          <circle cx="50" cy="45" r="10" class="fill-primary"></circle>
-          <circle cx="150" cy="40" r="10" class="fill-secondary"></circle>
-          <circle cx="70" cy="85" r="10" class="fill-accent"></circle>
-          <circle cx="135" cy="88" r="10" class="fill-info"></circle>
-        </svg>
-      </figure>
       <div class="card-body">
-        <h3 class="card-title text-lg">1. Relatedness</h3>
+        <h3 class="card-title text-lg">Law 1 — Relatedness</h3>
         <p class="text-base-content/70 text-sm">
-          Every element is related to every other element simply by sharing the
-          same viewport.
+          Every element is related to every other element, simply by being part
+          of the same viewport.
         </p>
+        <figure
+          class="bg-base-200/60 rounded-box border-base-200 mt-4 border p-4"
+        >
+          <svg
+            viewBox="0 0 240 236"
+            class="h-auto w-full"
+            role="img"
+            aria-label="Five elements connected by a complete graph — everything relates to everything"
+          >
+            {
+              edges.map((edge) => (
+                <line
+                  x1={edge.from.x}
+                  y1={edge.from.y}
+                  x2={edge.to.x}
+                  y2={edge.to.y}
+                  class="stroke-base-content/15"
+                  stroke-width="1.25"
+                />
+              ))
+            }
+            {
+              nodes.map((node) => (
+                <circle cx={node.x} cy={node.y} r="12" class={node.cls} />
+              ))
+            }
+          </svg>
+        </figure>
       </div>
     </div>
 
     <!-- Law 2: Hierarchy -->
     <div class="card bg-base-100 border-base-200 border shadow-sm">
-      <figure class="bg-base-200 px-4 pt-4">
-        <svg
-          viewBox="0 0 200 120"
-          class="h-32 w-full"
-          role="img"
-          aria-label="Relationships vary in strength: strong, medium, weak"
-        >
-          <line
-            x1="40"
-            y1="60"
-            x2="90"
-            y2="60"
-            class="stroke-primary"
-            stroke-width="6"></line>
-          <line
-            x1="110"
-            y1="60"
-            x2="150"
-            y2="60"
-            class="stroke-primary/60"
-            stroke-width="3"
-            stroke-dasharray="2 4"></line>
-          <circle cx="30" cy="60" r="12" class="fill-primary"></circle>
-          <circle cx="100" cy="60" r="12" class="fill-primary"></circle>
-          <circle cx="160" cy="60" r="12" class="fill-primary"></circle>
-          <text
-            x="65"
-            y="45"
-            class="fill-base-content/60"
-            font-size="11"
-            text-anchor="middle">strong</text
-          >
-          <text
-            x="130"
-            y="45"
-            class="fill-base-content/60"
-            font-size="11"
-            text-anchor="middle">weak</text
-          >
-        </svg>
-      </figure>
       <div class="card-body">
-        <h3 class="card-title text-lg">2. Hierarchy</h3>
+        <h3 class="card-title text-lg">Law 2 — Hierarchy</h3>
         <p class="text-base-content/70 text-sm">
-          Some relationships are stronger than others; relationship strength is
-          hierarchical (strong / medium / weak).
+          Some relationships are stronger than others. This is called hierarchy.
         </p>
+        <figure
+          class="bg-base-200/60 rounded-box border-base-200 mt-4 border p-4"
+        >
+          <svg
+            viewBox="0 0 240 236"
+            class="h-auto w-full"
+            role="img"
+            aria-label="The same elements, with connections weighted strong, medium and weak"
+          >
+            {
+              edges.map((edge) => {
+                const style = edgeStyle[strengths[edge.key] ?? "weak"]
+                return (
+                  <line
+                    x1={edge.from.x}
+                    y1={edge.from.y}
+                    x2={edge.to.x}
+                    y2={edge.to.y}
+                    class={style.cls}
+                    stroke-width={style.width}
+                    stroke-linecap="round"
+                  />
+                )
+              })
+            }
+            {
+              nodes.map((node) => (
+                <circle cx={node.x} cy={node.y} r="12" class={node.cls} />
+              ))
+            }
+            <!-- Legend -->
+            <g transform="translate(150 200)">
+              <line
+                x1="0"
+                y1="0"
+                x2="20"
+                y2="0"
+                class="stroke-base-content/70"
+                stroke-width="3"
+                stroke-linecap="round"></line>
+              <text x="26" y="4" class="fill-base-content/70" font-size="11"
+                >strong</text
+              >
+              <line
+                x1="0"
+                y1="16"
+                x2="20"
+                y2="16"
+                class="stroke-base-content/40"
+                stroke-width="2"
+                stroke-linecap="round"></line>
+              <text x="26" y="20" class="fill-base-content/60" font-size="11"
+                >medium</text
+              >
+              <line
+                x1="0"
+                y1="32"
+                x2="20"
+                y2="32"
+                class="stroke-base-content/15"
+                stroke-width="1.25"
+                stroke-linecap="round"></line>
+              <text x="26" y="36" class="fill-base-content/40" font-size="11"
+                >weak</text
+              >
+            </g>
+          </svg>
+        </figure>
       </div>
     </div>
 
     <!-- Law 3: Proximity -->
     <div class="card bg-base-100 border-base-200 border shadow-sm">
-      <figure class="bg-base-200 px-4 pt-4">
-        <svg
-          viewBox="0 0 200 120"
-          class="h-32 w-full"
-          role="img"
-          aria-label="Stronger relationships are placed closer together"
-        >
-          <circle cx="42" cy="60" r="9" class="fill-primary"></circle>
-          <circle cx="58" cy="60" r="9" class="fill-primary"></circle>
-          <circle cx="74" cy="60" r="9" class="fill-primary"></circle>
-          <circle cx="150" cy="60" r="9" class="fill-accent"></circle>
-          <text
-            x="58"
-            y="95"
-            class="fill-base-content/60"
-            font-size="11"
-            text-anchor="middle">close = related</text
-          >
-          <text
-            x="150"
-            y="95"
-            class="fill-base-content/60"
-            font-size="11"
-            text-anchor="middle">far</text
-          >
-        </svg>
-      </figure>
       <div class="card-body">
-        <h3 class="card-title text-lg">3. Proximity</h3>
+        <h3 class="card-title text-lg">Law 3 — Proximity</h3>
         <p class="text-base-content/70 text-sm">
           The stronger the relationship, the closer the elements should be
-          placed. Spacing encodes relationship strength.
+          placed.
         </p>
+        <figure
+          class="bg-base-200/60 rounded-box border-base-200 mt-4 border p-4"
+        >
+          <svg
+            viewBox="0 0 240 236"
+            class="h-auto w-full"
+            role="img"
+            aria-label="A tight cluster of related elements sits far from an unrelated, distant element"
+          >
+            <!-- Distance line between the tight cluster and the far node -->
+            <line
+              x1="78"
+              y1="72"
+              x2="180"
+              y2="176"
+              class="stroke-base-content/20"
+              stroke-width="1.5"
+              stroke-dasharray="3 5"></line>
+            <text
+              x="142"
+              y="112"
+              class="fill-base-content/45"
+              font-size="11"
+              transform="rotate(45 142 112)"
+              text-anchor="middle">more space</text
+            >
+
+            <!-- Tight cluster: strong relationship → placed close together -->
+            <circle cx="62" cy="60" r="11" class="fill-primary"></circle>
+            <circle cx="84" cy="56" r="11" class="fill-primary"></circle>
+            <circle cx="74" cy="80" r="11" class="fill-primary"></circle>
+            <text
+              x="72"
+              y="112"
+              class="fill-base-content/60"
+              font-size="11"
+              text-anchor="middle">tight</text
+            >
+
+            <!-- Distant node: weak relationship → far away -->
+            <circle cx="184" cy="180" r="11" class="fill-warning"></circle>
+            <text
+              x="184"
+              y="212"
+              class="fill-base-content/60"
+              font-size="11"
+              text-anchor="middle">distant</text
+            >
+          </svg>
+        </figure>
       </div>
     </div>
   </div>
