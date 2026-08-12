@@ -15,34 +15,47 @@
  */
 :root {
   --phi: 1.618;
-  --space-md: 1rem; /* 16px — base */
-  --space-sm: calc(var(--space-md) / var(--phi)); /* ~9.9px */
-  --space-xs: calc(var(--space-sm) / var(--phi)); /* ~6.1px */
-  --space-2xs: calc(var(--space-xs) / var(--phi)); /* ~3.8px */
-  --space-lg: calc(var(--space-md) * var(--phi)); /* ~25.9px */
-  --space-xl: calc(var(--space-lg) * var(--phi)); /* ~41.9px */
-  --space-2xl: calc(var(--space-xl) * var(--phi)); /* ~67.8px */
+  --space-md: 1rem;
+  /* 16px — base */
+  --space-sm: calc(var(--space-md) / var(--phi));
+  /* ~9.9px */
+  --space-xs: calc(var(--space-sm) / var(--phi));
+  /* ~6.1px */
+  --space-2xs: calc(var(--space-xs) / var(--phi));
+  /* ~3.8px */
+  --space-lg: calc(var(--space-md) * var(--phi));
+  /* ~25.9px */
+  --space-xl: calc(var(--space-lg) * var(--phi));
+  /* ~41.9px */
+  --space-2xl: calc(var(--space-xl) * var(--phi));
+  /* ~67.8px */
 }
 
 /* Helper classes: apply the φ token as a flex/grid gap. */
 .lk-space-2xs {
   gap: var(--space-2xs);
 }
+
 .lk-space-xs {
   gap: var(--space-xs);
 }
+
 .lk-space-sm {
   gap: var(--space-sm);
 }
+
 .lk-space-md {
   gap: var(--space-md);
 }
+
 .lk-space-lg {
   gap: var(--space-lg);
 }
+
 .lk-space-xl {
   gap: var(--space-xl);
 }
+
 .lk-space-2xl {
   gap: var(--space-2xl);
 }

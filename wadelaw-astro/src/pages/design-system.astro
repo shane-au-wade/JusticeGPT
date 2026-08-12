@@ -4,6 +4,7 @@ import Spacer from "@components/Spacer.astro"
 import SpacingScaleSection from "@components/design-system/SpacingScaleSection.astro"
 import SpacingLawsSection from "@components/design-system/SpacingLawsSection.astro"
 import ProximityInPracticeSection from "@components/design-system/ProximityInPracticeSection.astro"
+import LoadingButtonSection from "@components/design-system/LoadingButtonSection.astro"
 
 const swatches = [
   { name: "primary", bg: "bg-primary", fg: "text-primary-content" },
@@ -30,6 +31,7 @@ const tableOfContents = [
   { id: "typography", label: "Typography" },
   { id: "spacing", label: "Spacing" },
   { id: "buttons", label: "Buttons" },
+  { id: "loading-buttons", label: "Loading buttons" },
   { id: "badges", label: "Badges & alerts" },
   { id: "cards", label: "Cards" },
   { id: "forms", label: "Form controls" },
@@ -50,7 +52,10 @@ const tableOfContents = [
       <!-- Sticky table of contents -->
       <aside class="shrink-0 lg:sticky lg:top-8 lg:w-56">
         <nav aria-label="On this page">
-          <ul id="ds-toc" class="menu bg-transparent rounded-box w-full lg:w-56">
+          <ul
+            id="ds-toc"
+            class="menu rounded-box w-full bg-transparent lg:w-56"
+          >
             <li class="menu-title">Table of Contents</li>
             {
               tableOfContents.map((item) => (
@@ -65,8 +70,8 @@ const tableOfContents = [
         </nav>
       </aside>
 
-      <div class="lk-space-xl flex flex-col min-w-0 flex-1">
-        <Spacer/>
+      <div class="lk-space-xl flex min-w-0 flex-1 flex-col">
+        <Spacer />
         <!-- Theme switcher -->
         <section id="themes" class="mb-14 scroll-mt-8">
           <h2 class="mb-4 text-2xl font-semibold">Themes</h2>
@@ -181,6 +186,11 @@ const tableOfContents = [
             <button class="btn btn-primary" disabled>Disabled</button>
           </div>
         </section>
+
+        <!-- Loading buttons -->
+        <div id="loading-buttons" class="scroll-mt-8">
+          <LoadingButtonSection />
+        </div>
 
         <!-- Badges & alerts -->
         <section id="badges" class="mb-14 scroll-mt-8">

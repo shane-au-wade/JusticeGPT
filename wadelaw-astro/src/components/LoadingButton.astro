@@ -1,0 +1,31 @@
+---
+interface Props extends astroHTML.JSX.ButtonHTMLAttributes {
+  loadingLabel: string
+}
+
+const { loadingLabel, class: className, ...rest } = Astro.props
+---
+
+<button
+  class={className}
+  data-loading-button
+  data-loading-label={loadingLabel}
+  {...rest}
+>
+  <slot />
+</button>
+
+<script>
+  import { enterLoading } from "@lib/loading-button"
+
+  // Zero-config form path: enter loading on the parent form's submit. Buttons
+  // driven by `withLoading` opt out with `data-loading-manual` to avoid a
+  // double enter (which would stash the spinner markup as originalLabel).
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      "[data-loading-button]:not([data-loading-manual])",
+    )
+    .forEach((btn) => {
+      btn.closest("form")?.addEventListener("submit", () => enterLoading(btn))
+    })
+</script>

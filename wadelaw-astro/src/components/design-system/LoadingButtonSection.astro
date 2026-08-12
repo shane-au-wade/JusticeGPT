@@ -1,0 +1,188 @@
+---
+import DesignSystemSection from "@components/design-system/DesignSystemSection.astro"
+import LoadingButton from "@components/LoadingButton.astro"
+
+// Promise-path buttons across daisyUI sizes — spinner size is derived from the
+// button size class by the lib, so no per-button config is needed.
+const sizes = [
+  { cls: "btn btn-primary btn-xs", label: "Extra small" },
+  { cls: "btn btn-primary btn-sm", label: "Small" },
+  { cls: "btn btn-primary", label: "Normal" },
+  { cls: "btn btn-primary btn-lg", label: "Large" },
+]
+---
+
+<DesignSystemSection
+  title="Loading buttons"
+  description="A button that owns its full loading lifecycle. Pass an async action to withLoading and the button enters loading for its duration and auto-resets on settle — no hand-written try/catch/finally."
+>
+  <div class="grid gap-6 lg:grid-cols-2">
+    <!-- Promise path across sizes -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-lg">
+          Promise path &amp; size-aware spinner
+        </h3>
+        <p class="text-base-content/70 text-sm">
+          <code>withLoading(btn, action)</code> runs the action, showing a spinner
+          for its duration then auto-resetting. Spinner size is derived from the button
+          size class.
+        </p>
+        <div class="lk-space-sm mt-4 flex flex-wrap items-center">
+          {
+            sizes.map((size) => (
+              <button
+                class={size.cls}
+                data-loading-button
+                data-loading-manual
+                data-loading-label="Saving…"
+                data-demo="resolve"
+              >
+                {size.label}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-reset on error -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-lg">Auto-reset on error</h3>
+        <p class="text-base-content/70 text-sm">
+          When the action rejects, the button resets itself so the user can
+          retry. The error surfaces to the caller's <code>.catch()</code>.
+        </p>
+        <div class="lk-space-sm mt-4 flex flex-wrap items-center">
+          <button
+            class="btn btn-error"
+            data-loading-button
+            data-loading-manual
+            data-loading-label="Deleting…"
+            data-demo="reject"
+          >
+            Delete record
+          </button>
+          <span
+            class="text-error hidden text-sm"
+            data-demo-error
+            role="status"
+            aria-live="polite">Failed — try again.</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Stay loading on success (navigate-away case) -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-lg">Stay loading on success</h3>
+        <p class="text-base-content/70 text-sm">
+          For navigate-away flows, pass <code>stayLoadingOnSuccess</code> so the button
+          keeps spinning after success instead of flashing back.
+        </p>
+        <div class="lk-space-sm mt-4 flex flex-wrap items-center">
+          <button
+            class="btn btn-primary"
+            data-loading-button
+            data-loading-manual
+            data-loading-label="Redirecting…"
+            data-demo="stay"
+          >
+            Create &amp; continue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zero-config form path -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-lg">Zero-config form submit</h3>
+        <p class="text-base-content/70 text-sm">
+          Inside a <code>&lt;form&gt;</code>, the button enters loading on
+          submit automatically — width-locked and disabled to prevent
+          double-submit.
+        </p>
+        <form
+          data-demo-form
+          class="mt-4 flex flex-col"
+          style="gap: var(--space-sm);"
+        >
+          <input
+            type="text"
+            name="name"
+            placeholder="Organization name"
+            class="input input-bordered w-full"
+          />
+          <div>
+            <LoadingButton
+              type="submit"
+              class="btn btn-primary"
+              loadingLabel="Creating…"
+            >
+              Create organization
+            </LoadingButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</DesignSystemSection>
+
+<script>
+  import { withLoading, exitLoading } from "@lib/loading-button"
+
+  // Simulated async work — this is a static site with no backend.
+  const wait = (ms: number) =>
+    new Promise<void>((resolve) => setTimeout(resolve, ms))
+  const fail = (ms: number) =>
+    new Promise<void>((_, reject) =>
+      setTimeout(() => reject(new Error("Simulated failure")), ms),
+    )
+
+  document.querySelectorAll<HTMLButtonElement>("[data-demo]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const kind = btn.dataset.demo
+
+      if (kind === "resolve") {
+        void withLoading(btn, () => wait(3000))
+        return
+      }
+
+      if (kind === "stay") {
+        void withLoading(btn, () => wait(3000), {
+          stayLoadingOnSuccess: true,
+        }).then(() => {
+          // Simulate the navigate-away completing, then reset for the demo.
+          setTimeout(() => exitLoading(btn), 1200)
+        })
+        return
+      }
+
+      if (kind === "reject") {
+        const errorEl =
+          btn.parentElement?.querySelector<HTMLElement>("[data-demo-error]")
+        errorEl?.classList.add("hidden")
+        withLoading(btn, () => fail(1600)).catch(() => {
+          errorEl?.classList.remove("hidden")
+        })
+      }
+    })
+  })
+
+  // Form path: intercept submit, keep the button spinning, then settle.
+  document
+    .querySelectorAll<HTMLFormElement>("[data-demo-form]")
+    .forEach((form) => {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault()
+        const btn = form.querySelector<HTMLButtonElement>(
+          "[data-loading-button]",
+        )
+        // The component already entered loading on submit; just reset when done.
+        setTimeout(() => btn && exitLoading(btn), 1600)
+      })
+    })
+</script>
