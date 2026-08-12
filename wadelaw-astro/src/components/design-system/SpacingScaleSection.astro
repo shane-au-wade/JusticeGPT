@@ -1,0 +1,62 @@
+---
+import DesignSystemSection from "@components/design-system/DesignSystemSection.astro"
+
+const tokens = [
+  {
+    name: "space-2xs",
+    value: "~3.8px",
+    use: "Within a single informational unit",
+  },
+  { name: "space-xs", value: "~6.1px", use: "Tight intra-element spacing" },
+  { name: "space-sm", value: "~9.9px", use: "Related items in a group" },
+  { name: "space-md", value: "16px", use: "Base rhythm / default gap" },
+  {
+    name: "space-lg",
+    value: "~25.9px",
+    use: "Between distinct groups / weak relations",
+  },
+  { name: "space-xl", value: "~41.9px", use: "Section separation" },
+  { name: "space-2xl", value: "~67.8px", use: "Major layout boundaries" },
+]
+---
+
+<DesignSystemSection
+  id="spacing-scale"
+  title="Spacing scale (φ)"
+  description="Spacing grows exponentially by the golden ratio (φ = 1.618) rather than a linear base-4/8 grid. Each step up is ~1.618× the previous; each step down divides by φ. Use these tokens — never invent ad-hoc pixel values."
+>
+  <div class="card bg-base-100 border-base-200 border shadow-sm">
+    <div class="card-body">
+      <ul class="flex flex-col" style="gap: var(--space-sm);">
+        {
+          tokens.map((token) => (
+            <li class="flex items-center" style="gap: var(--space-md);">
+              <code class="text-primary w-28 shrink-0 font-mono text-sm">
+                {token.name}
+              </code>
+              <span
+                class="bg-primary h-4 shrink-0 rounded-sm"
+                style={`width: var(--${token.name});`}
+              />
+              <span class="text-base-content/60 w-16 shrink-0 text-right font-mono text-xs">
+                {token.value}
+              </span>
+              <span class="text-base-content/70 hidden text-sm sm:inline">
+                {token.use}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+
+  <p class="text-base-content/60 mt-4 text-sm">
+    Apply via <code class="text-primary font-mono"
+      >style="gap: var(--space-md);"</code
+    > or the helper classes <code class="text-primary font-mono"
+      >.lk-space-2xs</code
+    > … <code class="text-primary font-mono">.lk-space-2xl</code> (which set
+    <code class="font-mono">gap</code>).
+  </p>
+</DesignSystemSection>

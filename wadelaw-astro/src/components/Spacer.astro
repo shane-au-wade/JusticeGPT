@@ -1,0 +1,22 @@
+---
+type Size = "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl"
+
+interface Props {
+  /** φ token to size the gap. Defaults to the base rhythm. */
+  size?: Size
+  /** Which dimension to occupy. In a flex row use "horizontal"; in a column use "vertical". */
+  axis?: "vertical" | "horizontal"
+  /** If true, greedily eats remaining free space (flex-grow) — great for pushing items apart. */
+  grow?: boolean
+}
+
+const { size = "md", axis = "vertical", grow = false } = Astro.props
+
+const token = `var(--space-${size})`
+// A fixed-size spacer: height for vertical stacks, width for rows.
+// shrink-0 keeps flexbox from collapsing it.
+const dimension = axis === "vertical" ? `height: ${token};` : `width: ${token};`
+const style = grow ? "flex: 1 1 0%;" : dimension
+---
+
+<div aria-hidden="true" class="shrink-0" style={style}></div>

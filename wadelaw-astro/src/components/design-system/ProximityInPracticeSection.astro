@@ -1,0 +1,86 @@
+---
+import DesignSystemSection from "@components/design-system/DesignSystemSection.astro"
+
+const folders = ["Inbox", "Starred", "Sent", "Archive"]
+
+const emails = [
+  {
+    sender: "Hon. Court Clerk",
+    subject: "Hearing rescheduled — Case 24-1180",
+    preview: "The status conference has been moved to the 14th at 9:00 AM.",
+  },
+  {
+    sender: "Danielle Ortiz",
+    subject: "Signed retainer attached",
+    preview: "Thanks for the call today — the signed agreement is attached.",
+  },
+  {
+    sender: "Billing",
+    subject: "Invoice #4821 is ready",
+    preview: "Your monthly statement is available for review in the portal.",
+  },
+]
+---
+
+<DesignSystemSection
+  id="proximity-in-practice"
+  title="Proximity in practice"
+  description="A worked example: an email inbox. Sender + Subject + Preview form one informational unit (space-2xs). Rows sit space-sm apart. The sidebar has a weak relationship to any single email, so it lives across a space-lg boundary."
+>
+  <!-- Sidebar ↔ list: weak relationship → space-lg boundary -->
+  <div
+    class="rounded-box border-base-200 flex overflow-hidden border"
+    style="gap: var(--space-lg);"
+  >
+    <aside class="bg-base-200 hidden shrink-0 p-4 sm:block">
+      <ul class="menu w-40 p-0" style="gap: var(--space-2xs);">
+        {
+          folders.map((folder, i) => (
+            <li>
+              <a class={i === 0 ? "active" : ""}>{folder}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <!-- Row-to-row: space-sm -->
+    <ul
+      class="bg-base-100 flex flex-1 flex-col py-4 pr-4"
+      style="gap: var(--space-sm);"
+    >
+      {
+        emails.map((email) => (
+          <li
+            class="hover:bg-base-200 rounded-box flex flex-col p-3 transition-colors"
+            style="gap: var(--space-2xs);"
+          >
+            {/* Sender + Subject + Preview: one unit → space-2xs */}
+            <span class="text-sm font-semibold">{email.sender}</span>
+            <span class="text-base-content/90 text-sm">{email.subject}</span>
+            <span class="text-base-content/60 truncate text-xs">
+              {email.preview}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <!-- Content shifts relationships nuance -->
+  <div class="alert bg-base-200 border-base-300 mt-6 items-start">
+    <span class="text-base-content/80 text-sm">
+      <strong>Content shifts relationships.</strong> Proximity should follow
+      <em>meaning</em>, not just layout convenience. A semantically-linked icon
+      + word pair reinforce each other and belong close together:
+      <span
+        class="text-base-content bg-base-100 mx-1 inline-flex items-center rounded px-2 py-0.5"
+        style="gap: var(--space-2xs);"
+      >
+        <span aria-hidden="true">☀</span><span class="font-medium">Sunny</span>
+      </span>
+      Swap the icon for something unrelated and the word instead gravitates toward
+      nearby related text.
+    </span>
+  </div>
+</DesignSystemSection>

@@ -1,0 +1,133 @@
+---
+import DesignSystemSection from "@components/design-system/DesignSystemSection.astro"
+---
+
+<DesignSystemSection
+  id="spacing-laws"
+  title="The 3 Laws of Spacing"
+  description="Spacing is not decoration — it encodes how strongly elements relate to one another."
+>
+  <div class="grid gap-6 md:grid-cols-3">
+    <!-- Law 1: Relatedness -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <figure class="bg-base-200 px-4 pt-4">
+        <svg
+          viewBox="0 0 200 120"
+          class="h-32 w-full"
+          role="img"
+          aria-label="Elements sharing a single viewport are related"
+        >
+          <rect
+            x="4"
+            y="4"
+            width="192"
+            height="112"
+            rx="8"
+            class="fill-base-100 stroke-base-300"
+            stroke-width="2"></rect>
+          <circle cx="50" cy="45" r="10" class="fill-primary"></circle>
+          <circle cx="150" cy="40" r="10" class="fill-secondary"></circle>
+          <circle cx="70" cy="85" r="10" class="fill-accent"></circle>
+          <circle cx="135" cy="88" r="10" class="fill-info"></circle>
+        </svg>
+      </figure>
+      <div class="card-body">
+        <h3 class="card-title text-lg">1. Relatedness</h3>
+        <p class="text-base-content/70 text-sm">
+          Every element is related to every other element simply by sharing the
+          same viewport.
+        </p>
+      </div>
+    </div>
+
+    <!-- Law 2: Hierarchy -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <figure class="bg-base-200 px-4 pt-4">
+        <svg
+          viewBox="0 0 200 120"
+          class="h-32 w-full"
+          role="img"
+          aria-label="Relationships vary in strength: strong, medium, weak"
+        >
+          <line
+            x1="40"
+            y1="60"
+            x2="90"
+            y2="60"
+            class="stroke-primary"
+            stroke-width="6"></line>
+          <line
+            x1="110"
+            y1="60"
+            x2="150"
+            y2="60"
+            class="stroke-primary/60"
+            stroke-width="3"
+            stroke-dasharray="2 4"></line>
+          <circle cx="30" cy="60" r="12" class="fill-primary"></circle>
+          <circle cx="100" cy="60" r="12" class="fill-primary"></circle>
+          <circle cx="160" cy="60" r="12" class="fill-primary"></circle>
+          <text
+            x="65"
+            y="45"
+            class="fill-base-content/60"
+            font-size="11"
+            text-anchor="middle">strong</text
+          >
+          <text
+            x="130"
+            y="45"
+            class="fill-base-content/60"
+            font-size="11"
+            text-anchor="middle">weak</text
+          >
+        </svg>
+      </figure>
+      <div class="card-body">
+        <h3 class="card-title text-lg">2. Hierarchy</h3>
+        <p class="text-base-content/70 text-sm">
+          Some relationships are stronger than others; relationship strength is
+          hierarchical (strong / medium / weak).
+        </p>
+      </div>
+    </div>
+
+    <!-- Law 3: Proximity -->
+    <div class="card bg-base-100 border-base-200 border shadow-sm">
+      <figure class="bg-base-200 px-4 pt-4">
+        <svg
+          viewBox="0 0 200 120"
+          class="h-32 w-full"
+          role="img"
+          aria-label="Stronger relationships are placed closer together"
+        >
+          <circle cx="42" cy="60" r="9" class="fill-primary"></circle>
+          <circle cx="58" cy="60" r="9" class="fill-primary"></circle>
+          <circle cx="74" cy="60" r="9" class="fill-primary"></circle>
+          <circle cx="150" cy="60" r="9" class="fill-accent"></circle>
+          <text
+            x="58"
+            y="95"
+            class="fill-base-content/60"
+            font-size="11"
+            text-anchor="middle">close = related</text
+          >
+          <text
+            x="150"
+            y="95"
+            class="fill-base-content/60"
+            font-size="11"
+            text-anchor="middle">far</text
+          >
+        </svg>
+      </figure>
+      <div class="card-body">
+        <h3 class="card-title text-lg">3. Proximity</h3>
+        <p class="text-base-content/70 text-sm">
+          The stronger the relationship, the closer the elements should be
+          placed. Spacing encodes relationship strength.
+        </p>
+      </div>
+    </div>
+  </div>
+</DesignSystemSection>
