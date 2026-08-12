@@ -1,0 +1,64 @@
+---
+import "../styles/global.css"
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const {
+  title = "Wade Law",
+  description = "Trusted legal counsel for individuals and businesses.",
+} = Astro.props
+
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/design-system", label: "Design System" },
+]
+---
+
+<html lang="en" data-theme="corporate">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body class="bg-base-100 text-base-content flex min-h-screen flex-col">
+    <header class="navbar bg-base-100 border-base-200 border-b px-4 lg:px-8">
+      <div class="navbar-start">
+        <a href="/" class="btn btn-ghost text-xl font-semibold tracking-tight">
+          Wade<span class="text-primary">Law</span>
+        </a>
+      </div>
+      <nav class="navbar-end gap-1">
+        {
+          navLinks.map((link) => (
+            <a href={link.href} class="btn btn-ghost btn-sm">
+              {link.label}
+            </a>
+          ))
+        }
+        <a href="/#contact" class="btn btn-primary btn-sm">Contact</a>
+      </nav>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer
+      class="footer footer-center bg-base-200 text-base-content/70 border-base-300 border-t p-8"
+    >
+      <aside>
+        <p class="font-semibold">
+          Wade<span class="text-primary">Law</span>
+        </p>
+        <p>&copy; {new Date().getFullYear()} Wade Law. All rights reserved.</p>
+      </aside>
+    </footer>
+  </body>
+</html>
